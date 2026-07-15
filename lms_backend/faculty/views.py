@@ -77,3 +77,33 @@ class LearningMaterialViewSet(viewsets.ModelViewSet):
         context = super().get_serializer_context()
         context["request"] = self.request
         return context
+    
+from .models import Assignment
+from .serializers import AssignmentSerializer
+
+
+class AssignmentViewSet(viewsets.ModelViewSet):
+    """
+    Full CRUD for Assignments, scoped to the logged-in faculty
+    member's own courses only.
+
+    GET    /api/faculty/assignments/
+    POST   /api/faculty/assignments/
+    GET    /api/faculty/assignments/{id}/
+    PATCH  /api/faculty/assignments/{id}/
+    DELETE /api/faculty/assignments/{id}/
+    """
+    serializer_class = AssignmentSerializer
+    permission_classes = [IsAuthenticated, IsFaculty]
+
+    def get_queryset(self):
+        return (
+            Assignment.objects
+            .filter(course__faculty=self.request.user)
+            .order_by("-due_date")
+        )
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["request"] = self.request
+        return context

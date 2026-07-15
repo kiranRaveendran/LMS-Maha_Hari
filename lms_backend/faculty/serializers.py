@@ -14,9 +14,14 @@ class FacultyProfileSerializer(serializers.ModelSerializer):
 
 
 class FacultyCourseSerializer(serializers.ModelSerializer):
+    batch_name = serializers.SerializerMethodField()
+
     class Meta:
         model = Course
-        fields = ["id", "name", "code", "description"]
+        fields = ["id", "name", "code", "description", "batch_name"]
+
+    def get_batch_name(self, obj):
+        return obj.batch.name if obj.batch else None
 
 
 class FacultyDashboardSerializer(serializers.Serializer):
@@ -43,5 +48,22 @@ class LearningMaterialSerializer(serializers.ModelSerializer):
         if request and course.faculty_id != request.user.id:
             raise serializers.ValidationError(
                 "You can only upload materials for your own courses."
+            )
+        return course
+    
+from faculty.models import Assignment
+
+
+class AssignmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Assignment
+        fields = ["id", "course", "title", "description", "due_date"]
+        read_only_fields = ["id"]
+
+    def validate_course(self, course):
+        request = self.context.get("request")
+        if request and course.faculty_id != request.user.id:
+            raise serializers.ValidationError(
+                "You can only create assignments for your own courses."
             )
         return course

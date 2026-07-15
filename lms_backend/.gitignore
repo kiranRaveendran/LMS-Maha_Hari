@@ -1,0 +1,14 @@
+ 
+
+
+# Ignore python cache files everywhere in the project
+**/__pycache__/
+*.py[cod]
+
+# Ignore migrations across all apps
+**/migrations/
+!**/migrations/__init__.py
+
+# Ignore the virtual environment folder
+venv/
+.env*

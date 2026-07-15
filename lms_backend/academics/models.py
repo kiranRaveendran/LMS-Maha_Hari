@@ -25,6 +25,14 @@ class Course(models.Model):
         related_name="courses"
     )
 
+    batch = models.ForeignKey(
+        Batch,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="courses"
+    )
+
     def __str__(self):
         return f"{self.code} - {self.name}"
 
