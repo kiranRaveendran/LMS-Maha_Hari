@@ -31,6 +31,9 @@ class FacultyDashboardSerializer(serializers.Serializer):
     total_students = serializers.IntegerField()
     total_assignments = serializers.IntegerField()
     total_learning_materials = serializers.IntegerField()
+    pending_grading_count = serializers.IntegerField()
+    attendance_percentage_this_month = serializers.FloatField(allow_null=True)
+    average_marks = serializers.FloatField(allow_null=True)
 
 from faculty.models import LearningMaterial
 
@@ -67,3 +70,81 @@ class AssignmentSerializer(serializers.ModelSerializer):
                 "You can only create assignments for your own courses."
             )
         return course
+    
+    
+from faculty.models import Submission
+
+
+class SubmissionSerializer(serializers.ModelSerializer):
+    student_username = serializers.CharField(source="student.username", read_only=True)
+    assignment_title = serializers.CharField(source="assignment.title", read_only=True)
+
+    class Meta:
+        model = Submission
+        fields = [
+            "id", "assignment", "assignment_title", "student", "student_username",
+            "file", "submitted_at", "grade", "feedback"
+        ]
+        read_only_fields = ["id", "assignment", "student", "file", "submitted_at"]
+
+
+class SubmissionGradeSerializer(serializers.ModelSerializer):
+    """Used only for PATCH — faculty can update grade/feedback, nothing else."""
+    class Meta:
+        model = Submission
+        fields = ["grade", "feedback"]
+
+
+from faculty.models import Attendance
+
+
+class AttendanceSerializer(serializers.ModelSerializer):
+    student_username = serializers.CharField(source="student.username", read_only=True)
+
+    class Meta:
+        model = Attendance
+        fields = ["id", "course", "student", "student_username", "date", "status"]
+        read_only_fields = ["id"]
+
+    def validate_course(self, course):
+        request = self.context.get("request")
+        if request and course.faculty_id != request.user.id:
+            raise serializers.ValidationError(
+                "You can only manage attendance for your own courses."
+            )
+        return course
+    
+
+
+from faculty.models import ExamMark
+
+
+class ExamMarkSerializer(serializers.ModelSerializer):
+    student_username = serializers.CharField(source="student.username", read_only=True)
+
+    class Meta:
+        model = ExamMark
+        fields = ["id", "course", "student", "student_username", "exam_type", "marks"]
+        read_only_fields = ["id"]
+
+    def validate_course(self, course):
+        request = self.context.get("request")
+        if request and course.faculty_id != request.user.id:
+            raise serializers.ValidationError(
+                "You can only manage marks for your own courses."
+            )
+        return course
+    
+
+from leave_management.models import LeaveRequest
+
+
+class FacultyLeaveRequestSerializer(serializers.ModelSerializer):
+    reviewed_by_username = serializers.CharField(source="reviewed_by.username", read_only=True, default=None)
+
+    class Meta:
+        model = LeaveRequest
+        fields = [
+            "id", "reason", "start_date", "end_date",
+            "status", "applied_at", "reviewed_by_username"
+        ]
