@@ -1,0 +1,1093 @@
+/* =========================================================
+   LMS ADMIN PANEL
+   Part 1 - Base Layout, Sidebar & Topbar
+========================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+
+    --primary: #2563eb;
+    --primary-dark: #1d4ed8;
+
+    --success: #10b981;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+
+    --dark: #111827;
+    --dark-light: #1f2937;
+
+    --body: #f5f7fb;
+    --card: #ffffff;
+
+    --text: #111827;
+    --text-light: #6b7280;
+
+    --border: #e5e7eb;
+
+    --radius: 16px;
+
+    --shadow:
+        0 10px 30px rgba(0, 0, 0, .06);
+
+    --transition: .25s ease;
+
+    --sidebar-width: 270px;
+
+}
+
+* {
+
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+
+}
+
+html {
+
+    scroll-behavior: smooth;
+
+}
+
+body {
+
+    font-family: 'Inter', sans-serif;
+
+    background: var(--body);
+
+    color: var(--text);
+
+    overflow-x: hidden;
+
+}
+
+/* =========================================================
+   Layout
+========================================================= */
+
+.wrapper {
+
+    display: flex;
+
+    min-height: 100vh;
+
+}
+
+.sidebar {
+
+    width: var(--sidebar-width);
+
+    position: fixed;
+
+    left: 0;
+    top: 0;
+    bottom: 0;
+
+    background: var(--dark);
+
+    color: #fff;
+
+    display: flex;
+
+    flex-direction: column;
+
+    z-index: 1040;
+
+    transition: .3s;
+
+    box-shadow: 5px 0 25px rgba(0, 0, 0, .15);
+
+}
+
+.main-content {
+
+    flex: 1;
+
+    margin-left: var(--sidebar-width);
+
+    display: flex;
+
+    flex-direction: column;
+
+    min-height: 100vh;
+
+    transition: .3s;
+
+}
+
+/* =========================================================
+   Logo
+========================================================= */
+
+.logo {
+
+    height: 75px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 12px;
+
+    font-size: 22px;
+
+    font-weight: 700;
+
+    border-bottom: 1px solid rgba(255, 255, 255, .08);
+
+}
+
+.logo i {
+
+    font-size: 28px;
+
+    color: #60a5fa;
+
+}
+
+/* =========================================================
+   Navigation
+========================================================= */
+
+.nav-menu {
+
+    list-style: none;
+
+    padding: 20px 14px;
+
+    flex: 1;
+
+}
+
+.nav-menu li {
+
+    margin-bottom: 8px;
+
+}
+
+.nav-link {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 14px;
+
+    padding: 14px 18px;
+
+    color: #d1d5db;
+
+    text-decoration: none;
+
+    border-radius: 12px;
+
+    transition: var(--transition);
+
+    font-weight: 500;
+
+}
+
+.nav-link i {
+
+    font-size: 20px;
+
+    width: 24px;
+
+    text-align: center;
+
+}
+
+.nav-link:hover {
+
+    background: var(--primary);
+
+    color: #fff;
+
+    transform: translateX(4px);
+
+}
+
+.nav-link.active {
+
+    background: var(--primary);
+
+    color: #fff;
+
+}
+
+/* =========================================================
+   Sidebar Footer
+========================================================= */
+
+.sidebar-footer {
+
+    padding: 20px;
+
+    border-top: 1px solid rgba(255, 255, 255, .06);
+
+}
+
+.logout-btn {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 10px;
+
+    width: 100%;
+
+    padding: 13px;
+
+    text-decoration: none;
+
+    color: #fff;
+
+    background: var(--danger);
+
+    border-radius: 12px;
+
+    transition: var(--transition);
+
+    font-weight: 600;
+
+}
+
+.logout-btn:hover {
+
+    background: #dc2626;
+
+    color: #fff;
+
+}
+
+/* =========================================================
+   Topbar
+========================================================= */
+
+.topbar {
+
+    height: 75px;
+
+    background: #fff;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    padding: 0 30px;
+
+    border-bottom: 1px solid var(--border);
+
+    position: sticky;
+
+    top: 0;
+
+    z-index: 1030;
+
+    box-shadow: 0 2px 12px rgba(0, 0, 0, .04);
+
+}
+
+.page-title {
+
+    margin: 0;
+
+    font-size: 24px;
+
+    font-weight: 700;
+
+}
+
+.top-right {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 20px;
+
+}
+
+.admin-avatar {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    font-weight: 600;
+
+}
+
+.admin-avatar i {
+
+    font-size: 34px;
+
+    color: var(--primary);
+
+}
+
+/* =========================================================
+   Page Content
+========================================================= */
+
+.page-content {
+
+    padding: 30px;
+
+    flex: 1;
+
+}
+
+/* =========================================================
+   Mobile Toggle
+========================================================= */
+
+.sidebar-toggle {
+
+    display: none;
+
+    width: 44px;
+
+    height: 44px;
+
+    border: none;
+
+    border-radius: 12px;
+
+    background: #2563eb;
+
+    color: #fff;
+
+    cursor: pointer;
+
+    align-items: center;
+
+    justify-content: center;
+
+    transition: .25s;
+
+    box-shadow: 0 4px 12px rgba(37, 99, 235, .25);
+
+}
+
+.sidebar-toggle:hover {
+
+    background: #1d4ed8;
+
+    transform: translateY(-2px);
+
+}
+
+.sidebar-toggle i {
+
+    font-size: 22px;
+
+}
+
+.sidebar-toggle i {
+
+    font-size: 20px;
+
+}
+
+/* =========================================================
+   Overlay
+========================================================= */
+
+.sidebar-overlay {
+
+    position: fixed;
+
+    inset: 0;
+
+    background: rgba(0, 0, 0, .45);
+
+    opacity: 0;
+
+    visibility: hidden;
+
+    transition: .25s;
+
+    z-index: 1035;
+
+}
+
+.sidebar-overlay.show {
+
+    opacity: 1;
+
+    visibility: visible;
+
+}
+
+/* =========================================================
+   PART 2
+   Cards • Dashboard • Tables • Forms • Buttons
+========================================================= */
+
+/* ---------- Cards ---------- */
+
+.card {
+
+    border: none;
+
+    border-radius: 18px;
+
+    background: #fff;
+
+    box-shadow: 0 10px 25px rgba(0, 0, 0, .06);
+
+}
+
+.card-header {
+
+    background: #fff;
+
+    border-bottom: 1px solid #eef2f7;
+
+    padding: 24px;
+
+}
+
+.card-body {
+
+    padding: 24px;
+
+}
+
+/* ---------- Dashboard Cards ---------- */
+
+.dashboard-card {
+
+    border-radius: 18px;
+
+    color: #fff;
+
+    overflow: hidden;
+
+    transition: .25s;
+
+}
+
+.dashboard-card:hover {
+
+    transform: translateY(-5px);
+
+}
+
+.dashboard-card .card-body {
+
+    padding: 28px;
+
+}
+
+.dashboard-value {
+
+    font-size: 34px;
+
+    font-weight: 700;
+
+}
+
+.dashboard-label {
+
+    font-size: 15px;
+
+    opacity: .95;
+
+}
+
+.dashboard-icon {
+
+    font-size: 46px;
+
+    opacity: .25;
+
+}
+
+.bg-primary-soft {
+
+    background: linear-gradient(135deg, #2563eb, #4f8cff);
+
+}
+
+.bg-success-soft {
+
+    background: linear-gradient(135deg, #10b981, #34d399);
+
+}
+
+.bg-warning-soft {
+
+    background: linear-gradient(135deg, #f59e0b, #fbbf24);
+
+}
+
+.bg-danger-soft {
+
+    background: linear-gradient(135deg, #ef4444, #fb7185);
+
+}
+
+/* ---------- Search ---------- */
+
+.input-group {
+
+    border-radius: 12px;
+
+    overflow: hidden;
+
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .05);
+
+}
+
+.input-group-text {
+
+    background: #fff;
+
+    border-right: none;
+
+}
+
+.input-group .form-control {
+
+    border-left: none;
+
+    box-shadow: none;
+
+}
+
+.input-group .form-control:focus {
+
+    box-shadow: none;
+
+}
+
+/* ---------- Tables ---------- */
+
+.table {
+
+    margin-bottom: 0;
+
+}
+
+.table thead {
+
+    background: #f8fafc;
+
+}
+
+.table th {
+
+    border: none;
+
+    color: #6b7280;
+
+    font-size: 14px;
+
+    font-weight: 600;
+
+    text-transform: uppercase;
+
+    padding: 16px;
+
+}
+
+.table td {
+
+    padding: 18px 16px;
+
+    vertical-align: middle;
+
+    border-top: 1px solid #eef2f7;
+
+}
+
+.table-hover tbody tr {
+
+    transition: .2s;
+
+}
+
+.table-hover tbody tr:hover {
+
+    background: #f8fbff;
+
+}
+
+/* ---------- Status ---------- */
+
+.status-active {
+
+    display: inline-block;
+
+    background: #d1fae5;
+
+    color: #047857;
+
+    padding: 6px 14px;
+
+    border-radius: 30px;
+
+    font-size: 13px;
+
+    font-weight: 600;
+
+}
+
+/* ---------- Buttons ---------- */
+
+.btn {
+
+    border-radius: 10px;
+
+    font-weight: 600;
+
+}
+
+.btn-primary {
+
+    background: #2563eb;
+
+    border: none;
+
+}
+
+.btn-primary:hover {
+
+    background: #1d4ed8;
+
+}
+
+.action-btn {
+
+    width: 38px;
+
+    height: 38px;
+
+    border: none;
+
+    border-radius: 10px;
+
+}
+
+.edit-btn {
+
+    background: #e8f1ff;
+
+    color: #2563eb;
+
+}
+
+.edit-btn:hover {
+
+    background: #2563eb;
+
+    color: #fff;
+
+}
+
+.delete-btn {
+
+    background: #ffe8e8;
+
+    color: #ef4444;
+
+}
+
+.delete-btn:hover {
+
+    background: #ef4444;
+
+    color: #fff;
+
+}
+
+/* ---------- Forms ---------- */
+
+.form-label {
+
+    font-weight: 600;
+
+    margin-bottom: .5rem;
+
+}
+
+.form-control {
+
+    border-radius: 10px;
+
+    min-height: 46px;
+
+    border: 1px solid #d1d5db;
+
+}
+
+.form-control:focus {
+
+    border-color: #2563eb;
+
+    box-shadow: 0 0 0 .2rem rgba(37, 99, 235, .12);
+
+}
+
+.form-control.is-invalid {
+
+    border-color: #dc3545;
+
+}
+
+/* ---------- Validation ---------- */
+
+.text-danger.small {
+
+    font-size: .82rem;
+
+}
+
+/* ---------- Modal ---------- */
+
+.modal-content {
+
+    border: none;
+
+    border-radius: 18px;
+
+}
+
+.modal-header {
+
+    border-bottom: 1px solid #edf2f7;
+
+}
+
+.modal-footer {
+
+    border-top: 1px solid #edf2f7;
+
+}
+
+/* ---------- Success Alert ---------- */
+
+#successMessage {
+
+    border-radius: 14px;
+
+    font-weight: 600;
+
+}
+
+/* ---------- Empty State ---------- */
+
+.empty-state {
+
+    text-align: center;
+
+    color: #6b7280;
+
+    padding: 60px 20px;
+
+}
+
+.empty-state i {
+
+    font-size: 60px;
+
+    margin-bottom: 10px;
+
+}
+
+/* ---------- Pagination ---------- */
+
+.pagination {
+
+    margin-top: 25px;
+
+}
+
+.page-link {
+
+    border: none;
+
+    border-radius: 10px;
+
+    margin: 0 3px;
+
+    color: #2563eb;
+
+}
+
+.page-item.active .page-link {
+
+    background: #2563eb;
+
+}
+
+.page-link:hover {
+
+    background: #e8f1ff;
+
+}
+
+/* =========================================================
+   PART 3
+   Responsive Layout
+========================================================= */
+
+/* Hide mobile controls on desktop */
+
+.sidebar-overlay {
+    display: none;
+}
+
+.sidebar-toggle {
+    display: none;
+}
+
+
+/* =========================================================
+   Laptop
+========================================================= */
+
+@media (max-width:1200px) {
+
+    .page-content {
+        padding: 24px;
+    }
+
+    .topbar {
+        padding: 0 24px;
+    }
+
+}
+
+
+/* =========================================================
+   Tablet
+========================================================= */
+
+@media (max-width:992px) {
+
+    .sidebar {
+
+        left: -270px;
+
+    }
+
+    .sidebar.show {
+
+        left: 0;
+
+    }
+
+    .sidebar-overlay {
+
+        display: block;
+
+    }
+
+    .main-content {
+
+        margin-left: 0;
+
+        width: 100%;
+
+    }
+
+    .sidebar-toggle {
+
+        display: flex;
+
+    }
+
+    .topbar {
+
+        padding: 0 18px;
+
+    }
+
+    .page-content {
+
+        padding: 20px;
+
+    }
+
+    .admin-avatar span {
+
+        display: none;
+
+    }
+
+}
+
+
+/* =========================================================
+   Mobile
+========================================================= */
+
+@media (max-width:768px) {
+
+    .page-title {
+
+        font-size: 20px;
+
+    }
+
+    .page-content {
+
+        padding: 16px;
+
+    }
+
+    .card-body {
+
+        padding: 18px;
+
+    }
+
+    .card-header {
+
+        padding: 18px;
+
+    }
+
+    .dashboard-card {
+
+        margin-bottom: 18px;
+
+    }
+
+    .dashboard-value {
+
+        font-size: 28px;
+
+    }
+
+    .table-responsive {
+
+        border-radius: 12px;
+
+    }
+
+    .btn {
+
+        font-size: 14px;
+
+    }
+
+    .modal-dialog {
+
+        margin: 12px;
+
+    }
+
+}
+
+
+/* =========================================================
+   Small Mobile
+========================================================= */
+
+@media (max-width:576px) {
+
+    .topbar {
+
+        height: auto;
+
+        padding: 15px;
+
+        flex-wrap: wrap;
+
+        gap: 12px;
+
+    }
+
+    .page-title {
+
+        font-size: 18px;
+
+    }
+
+    .page-content {
+
+        padding: 14px;
+
+    }
+
+    .logo {
+
+        font-size: 18px;
+
+    }
+
+    .dashboard-value {
+
+        font-size: 24px;
+
+    }
+
+    .dashboard-icon {
+
+        font-size: 34px;
+
+    }
+
+    .table th,
+    .table td {
+
+        padding: 12px 10px;
+
+        font-size: 14px;
+
+    }
+
+}
+
+
+/* =========================================================
+   Smooth Animations
+========================================================= */
+
+.card,
+.btn,
+.form-control,
+.table tbody tr {
+
+    transition: .25s;
+
+}
+
+
+/* =========================================================
+   Scrollbar
+========================================================= */
+
+::-webkit-scrollbar {
+
+    width: 8px;
+
+}
+
+::-webkit-scrollbar-thumb {
+
+    background: #cbd5e1;
+
+    border-radius: 20px;
+
+}
+
+::-webkit-scrollbar-thumb:hover {
+
+    background: #94a3b8;
+
+}
