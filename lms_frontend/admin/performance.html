@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Performance Analysis | LMS Admin</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="/css/admin.css">
+    <link rel="stylesheet" href="/css/responsive.css">
+</head>
+<body>
+
+<template id="page-content-source">
+<div class="container-fluid">
+
+    <!-- Course-level -->
+    <div class="card shadow-sm border-0 mb-4">
+
+        <div class="card-header bg-white border-0 py-4">
+            <h3 class="fw-bold mb-1">Course Performance</h3>
+            <p class="text-muted mb-0">Per-student attendance and marks for a single course.</p>
+        </div>
+
+        <div class="card-body">
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-12">
+                    <label class="form-label">Course</label>
+                    <select id="courseSelect" class="form-control">
+                        <option value="">Select a course...</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="courseSummary" class="d-none mb-4">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="p-3 rounded-3 bg-light">
+                            <p class="text-muted small mb-1">Class Average Attendance</p>
+                            <p class="fs-4 fw-bold mb-0" id="courseAvgAttendance">—</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3 rounded-3 bg-light">
+                            <p class="text-muted small mb-1">Class Average Marks</p>
+                            <p class="fs-4 fw-bold mb-0" id="courseAvgMarks">—</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Student</th>
+                            <th>Attendance %</th>
+                            <th>Average Marks</th>
+                        </tr>
+                    </thead>
+                    <tbody id="courseStudentsBody">
+                        <tr>
+                            <td colspan="4" class="text-center py-4 text-muted">
+                                Select a course above to see student performance.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Batch-level -->
+    <div class="card shadow-sm border-0">
+
+        <div class="card-header bg-white border-0 py-4">
+            <h3 class="fw-bold mb-1">Batch Performance</h3>
+            <p class="text-muted mb-0">Rolled-up averages across every course under a batch.</p>
+        </div>
+
+        <div class="card-body">
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-12">
+                    <label class="form-label">Batch</label>
+                    <select id="batchSelect" class="form-control">
+                        <option value="">Select a batch...</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="batchSummary" class="d-none mb-4">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="p-3 rounded-3 bg-light">
+                            <p class="text-muted small mb-1">Overall Average Attendance</p>
+                            <p class="fs-4 fw-bold mb-0" id="batchAvgAttendance">—</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3 rounded-3 bg-light">
+                            <p class="text-muted small mb-1">Overall Average Marks</p>
+                            <p class="fs-4 fw-bold mb-0" id="batchAvgMarks">—</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Course</th>
+                            <th>Attendance %</th>
+                            <th>Average Marks</th>
+                        </tr>
+                    </thead>
+                    <tbody id="batchCoursesBody">
+                        <tr>
+                            <td colspan="4" class="text-center py-4 text-muted">
+                                Select a batch above to see course performance.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+</template>
+
+<script src="/js/layout.js"></script>
+<script>
+    renderLayout({ pageTitle: "Performance Analysis", active: "performance" });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/sidebar.js"></script>
+<script src="/js/admin-performance.js"></script>
+
+</body>
+</html>
