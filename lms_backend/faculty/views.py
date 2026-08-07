@@ -24,6 +24,7 @@ from .serializers import (
     AttendanceSerializer,
     ExamMarkSerializer,
     FacultyLeaveRequestSerializer,
+    StudentLeaveRequestSerializer, StudentLeaveReviewSerializer,
 )
 
 
@@ -62,24 +63,37 @@ class FacultyDashboardView(APIView):
             grade__isnull=True
         ).count()
 
-        # Attendance percentage for the current calendar month only —
-        # last month's numbers aren't actionable "right now" information.
+        # Per-course breakdown, not a single blended number — a merged
+        # "82% attendance across everything" is meaningless once a faculty
+        # member teaches more than one course with different patterns.
         today = date.today()
-        month_attendance = Attendance.objects.filter(
-            course__faculty=faculty_user,
-            date__year=today.year,
-            date__month=today.month
-        )
-        total_marked = month_attendance.count()
-        total_present = month_attendance.filter(status="PRESENT").count()
-        attendance_percentage = (
-            round((total_present / total_marked) * 100, 1) if total_marked else None
-        )
+        course_breakdown = []
 
-        avg_marks = ExamMark.objects.filter(
-            course__faculty=faculty_user
-        ).aggregate(avg=Avg("marks"))["avg"]
-        average_marks = round(float(avg_marks), 2) if avg_marks is not None else None
+        for course in courses:
+
+            month_attendance = Attendance.objects.filter(
+                course=course,
+                date__year=today.year,
+                date__month=today.month
+            )
+            total_marked = month_attendance.count()
+            total_present = month_attendance.filter(status="PRESENT").count()
+            attendance_percentage = (
+                round((total_present / total_marked) * 100, 1) if total_marked else None
+            )
+
+            avg_marks = ExamMark.objects.filter(course=course).aggregate(
+                avg=Avg("marks")
+            )["avg"]
+            average_marks = round(float(avg_marks), 2) if avg_marks is not None else None
+
+            course_breakdown.append({
+                "course_id": course.id,
+                "course_name": course.name,
+                "course_code": course.code,
+                "attendance_percentage_this_month": attendance_percentage,
+                "average_marks": average_marks,
+            })
 
         data = {
             "profile": faculty_user,
@@ -89,8 +103,7 @@ class FacultyDashboardView(APIView):
             "total_assignments": total_assignments,
             "total_learning_materials": total_learning_materials,
             "pending_grading_count": pending_grading_count,
-            "attendance_percentage_this_month": attendance_percentage,
-            "average_marks": average_marks,
+            "course_breakdown": course_breakdown,
         }
 
         serializer = FacultyDashboardSerializer(data)
@@ -394,17 +407,22 @@ class ExamMarkViewSet(viewsets.ModelViewSet):
 
 
 # ===============================================================
-# Stage 7 — Faculty Leave History (read-only)
+# Stage 7 — Faculty Leave (view own history + submit own requests)
 # ===============================================================
 
-class FacultyLeaveHistoryViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+class FacultyLeaveHistoryViewSet(
+    mixins.ListModelMixin, mixins.RetrieveModelMixin,
+    mixins.CreateModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet
+):
     """
-    Read-only — faculty view their own leave history only, never
-    another faculty member's, and can't create/edit/delete here
-    (that's a separate submission flow, not this module's job).
+    Faculty view their own leave history, submit new leave requests,
+    and withdraw (delete) a request only while it's still PENDING —
+    once reviewed, it becomes a permanent record and can't be deleted.
 
-    GET /api/faculty/leave-history/
-    GET /api/faculty/leave-history/{id}/
+    GET    /api/faculty/leave-history/
+    GET    /api/faculty/leave-history/{id}/
+    POST   /api/faculty/leave-history/
+    DELETE /api/faculty/leave-history/{id}/   (PENDING only)
     """
     serializer_class = FacultyLeaveRequestSerializer
     permission_classes = [IsAuthenticated, IsFaculty]
@@ -416,3 +434,85 @@ class FacultyLeaveHistoryViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixi
             .select_related("reviewed_by")
             .order_by("-applied_at")
         )
+
+    def perform_create(self, serializer):
+        # status/reviewed_by are deliberately not client-settable — every
+        # new request starts PENDING with no reviewer, regardless of what
+        # the request body contains (the serializer already locks status
+        # read-only, this is a second, redundant guarantee at the view level).
+        serializer.save(applicant=self.request.user, status="PENDING", reviewed_by=None)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance.status != "PENDING":
+            return Response(
+                {"detail": "Only pending requests can be withdrawn. This request has already been reviewed."},
+                status=400
+            )
+        return super().destroy(request, *args, **kwargs)
+
+
+# ===============================================================
+# Student Leave Approval — faculty review requests from their own students
+# ===============================================================
+
+class StudentLeaveRequestViewSet(
+    mixins.ListModelMixin, mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet
+):
+    """
+    Faculty view + approve/reject leave requests submitted by students
+    enrolled in any of their courses. A student enrolled in courses
+    taught by multiple faculty members can have their request actioned
+    by any one of them — there's no single "assigned" approver per
+    student in the current data model.
+
+    Delete is only allowed on already-decided requests (cleanup of old
+    records) — a PENDING request must go through Approve/Reject first,
+    it can't be deleted to dodge making a decision.
+
+    GET    /api/faculty/student-leave-requests/              (optionally ?status=PENDING)
+    GET    /api/faculty/student-leave-requests/{id}/
+    PATCH  /api/faculty/student-leave-requests/{id}/          (status only)
+    DELETE /api/faculty/student-leave-requests/{id}/          (non-PENDING only)
+    """
+    permission_classes = [IsAuthenticated, IsFaculty]
+    http_method_names = ["get", "patch", "delete", "head", "options"]
+
+    def get_queryset(self):
+        student_ids = (
+            StudentCourse.objects
+            .filter(course__faculty=self.request.user)
+            .values_list("student_id", flat=True)
+            .distinct()
+        )
+
+        queryset = (
+            LeaveRequest.objects
+            .filter(applicant_id__in=student_ids, applicant__role="STUDENT")
+            .select_related("applicant")
+            .order_by("-applied_at")
+        )
+
+        status_param = self.request.query_params.get("status")
+        if status_param:
+            queryset = queryset.filter(status=status_param)
+
+        return queryset
+
+    def get_serializer_class(self):
+        if self.action == "partial_update":
+            return StudentLeaveReviewSerializer
+        return StudentLeaveRequestSerializer
+
+    def perform_update(self, serializer):
+        serializer.save(reviewed_by=self.request.user)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance.status == "PENDING":
+            return Response(
+                {"detail": "Pending requests must be approved or rejected, not deleted."},
+                status=400
+            )
+        return super().destroy(request, *args, **kwargs)

@@ -28,21 +28,3 @@ class IsStudent(BasePermission):
             request.user.is_authenticated
             and request.user.role == "STUDENT"
         )
-    
-# new    
-class IsSuperUser(BasePermission):
-    def has_permission(self, request, view):
-        return bool(
-            request.user
-            and request.user.is_authenticated
-            and getattr(request.user, "role", None) == "SUPERUSER"
-        )
-    
-
-class IsFaculty(BasePermission):
-    def has_permission(self, request, view):
-        return bool(
-            request.user
-            and request.user.is_authenticated
-            and getattr(request.user, "role", None) == "FACULTY"
-        )

@@ -170,3 +170,231 @@ class DashboardStatsSerializer(serializers.Serializer):
     total_academic_managers = serializers.IntegerField()
     total_courses = serializers.IntegerField()
     pending_leave_requests = serializers.IntegerField()
+
+
+from academics.models import Course
+from leave_management.models import LeaveRequest
+
+
+class AdminCourseSerializer(serializers.ModelSerializer):
+    faculty_username = serializers.SerializerMethodField()
+    batch_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Course
+        fields = ["id", "name", "code", "description", "faculty_username", "batch_name"]
+
+    def get_faculty_username(self, obj):
+        return obj.faculty.username if obj.faculty else None
+
+    def get_batch_name(self, obj):
+        return obj.batch.name if obj.batch else None
+
+
+class AdminLeaveRequestSerializer(serializers.ModelSerializer):
+    applicant_username = serializers.CharField(source="applicant.username", read_only=True)
+
+    class Meta:
+        model = LeaveRequest
+        fields = ["id", "applicant", "applicant_username", "reason", "start_date", "end_date", "status", "applied_at"]
+        read_only_fields = ["id", "applicant", "reason", "start_date", "end_date", "applied_at"]
+
+
+class AdminLeaveReviewSerializer(serializers.ModelSerializer):
+    """PATCH-only — Admin can set status, nothing else."""
+    class Meta:
+        model = LeaveRequest
+        fields = ["status"]
+
+    def validate_status(self, value):
+        if value not in ("APPROVED", "REJECTED"):
+            raise serializers.ValidationError("Status must be APPROVED or REJECTED.")
+        return value
+
+
+
+
+from rest_framework import serializers
+
+from academics.models import Course
+from leave_management.models import LeaveRequest
+
+
+# ===============================================================
+# Admin Course oversight (read-only)
+# ===============================================================
+
+class AdminCourseSerializer(serializers.ModelSerializer):
+    faculty_username = serializers.SerializerMethodField()
+    batch_id = serializers.SerializerMethodField()
+    batch_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Course
+        fields = ["id", "name", "code", "description", "faculty_username", "batch_id", "batch_name"]
+
+    def get_faculty_username(self, obj):
+        return obj.faculty.username if obj.faculty else None
+
+    def get_batch_id(self, obj):
+        return obj.batch.id if obj.batch else None
+
+    def get_batch_name(self, obj):
+        return obj.batch.name if obj.batch else None
+
+
+# ===============================================================
+# Admin Leave Requests — Academic Manager requests only
+# ===============================================================
+
+class AdminLeaveRequestSerializer(serializers.ModelSerializer):
+    applicant_username = serializers.CharField(source="applicant.username", read_only=True)
+
+    class Meta:
+        model = LeaveRequest
+        fields = ["id", "applicant", "applicant_username", "reason", "start_date", "end_date", "status", "applied_at"]
+        read_only_fields = ["id", "applicant", "reason", "start_date", "end_date", "applied_at"]
+
+
+class AdminLeaveReviewSerializer(serializers.ModelSerializer):
+    """PATCH-only — Admin can set status, nothing else."""
+    class Meta:
+        model = LeaveRequest
+        fields = ["status"]
+
+    def validate_status(self, value):
+        if value not in ("APPROVED", "REJECTED"):
+            raise serializers.ValidationError("Status must be APPROVED or REJECTED.")
+        return value
+
+
+# ===============================================================
+# Admin Student Performance Analysis — course-level and batch-level
+# ===============================================================
+
+class AdminStudentPerformanceSerializer(serializers.Serializer):
+    student_id = serializers.IntegerField()
+    username = serializers.CharField()
+    attendance_percentage = serializers.FloatField(allow_null=True)
+    average_marks = serializers.FloatField(allow_null=True)
+
+
+class AdminCoursePerformanceSerializer(serializers.Serializer):
+    course_id = serializers.IntegerField()
+    course_name = serializers.CharField()
+    course_code = serializers.CharField()
+    faculty_username = serializers.CharField(allow_null=True)
+    class_average_attendance = serializers.FloatField(allow_null=True)
+    class_average_marks = serializers.FloatField(allow_null=True)
+    students = AdminStudentPerformanceSerializer(many=True)
+
+
+class AdminBatchCourseSummarySerializer(serializers.Serializer):
+    course_id = serializers.IntegerField()
+    course_name = serializers.CharField()
+    course_code = serializers.CharField()
+    class_average_attendance = serializers.FloatField(allow_null=True)
+    class_average_marks = serializers.FloatField(allow_null=True)
+
+
+class AdminBatchPerformanceSerializer(serializers.Serializer):
+    batch_id = serializers.IntegerField()
+    batch_name = serializers.CharField()
+    overall_average_attendance = serializers.FloatField(allow_null=True)
+    overall_average_marks = serializers.FloatField(allow_null=True)
+    courses = AdminBatchCourseSummarySerializer(many=True)
+
+
+
+# new_
+
+
+from rest_framework import serializers
+
+from academics.models import Course
+from leave_management.models import LeaveRequest
+
+
+# ===============================================================
+# Admin Course oversight (read-only)
+# ===============================================================
+
+class AdminCourseSerializer(serializers.ModelSerializer):
+    faculty_username = serializers.SerializerMethodField()
+    batch_id = serializers.SerializerMethodField()
+    batch_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Course
+        fields = ["id", "name", "code", "description", "faculty_username", "batch_id", "batch_name"]
+
+    def get_faculty_username(self, obj):
+        return obj.faculty.username if obj.faculty else None
+
+    def get_batch_id(self, obj):
+        return obj.batch.id if obj.batch else None
+
+    def get_batch_name(self, obj):
+        return obj.batch.name if obj.batch else None
+
+
+# ===============================================================
+# Admin Leave Requests — Academic Manager requests only
+# ===============================================================
+
+class AdminLeaveRequestSerializer(serializers.ModelSerializer):
+    applicant_username = serializers.CharField(source="applicant.username", read_only=True)
+
+    class Meta:
+        model = LeaveRequest
+        fields = ["id", "applicant", "applicant_username", "reason", "start_date", "end_date", "status", "applied_at"]
+        read_only_fields = ["id", "applicant", "reason", "start_date", "end_date", "applied_at"]
+
+
+class AdminLeaveReviewSerializer(serializers.ModelSerializer):
+    """PATCH-only — Admin can set status, nothing else."""
+    class Meta:
+        model = LeaveRequest
+        fields = ["status"]
+
+    def validate_status(self, value):
+        if value not in ("APPROVED", "REJECTED"):
+            raise serializers.ValidationError("Status must be APPROVED or REJECTED.")
+        return value
+
+
+# ===============================================================
+# Admin Student Performance Analysis — course-level and batch-level
+# ===============================================================
+
+class AdminStudentPerformanceSerializer(serializers.Serializer):
+    student_id = serializers.IntegerField()
+    username = serializers.CharField()
+    attendance_percentage = serializers.FloatField(allow_null=True)
+    average_marks = serializers.FloatField(allow_null=True)
+
+
+class AdminCoursePerformanceSerializer(serializers.Serializer):
+    course_id = serializers.IntegerField()
+    course_name = serializers.CharField()
+    course_code = serializers.CharField()
+    faculty_username = serializers.CharField(allow_null=True)
+    class_average_attendance = serializers.FloatField(allow_null=True)
+    class_average_marks = serializers.FloatField(allow_null=True)
+    students = AdminStudentPerformanceSerializer(many=True)
+
+
+class AdminBatchCourseSummarySerializer(serializers.Serializer):
+    course_id = serializers.IntegerField()
+    course_name = serializers.CharField()
+    course_code = serializers.CharField()
+    class_average_attendance = serializers.FloatField(allow_null=True)
+    class_average_marks = serializers.FloatField(allow_null=True)
+
+
+class AdminBatchPerformanceSerializer(serializers.Serializer):
+    batch_id = serializers.IntegerField()
+    batch_name = serializers.CharField()
+    overall_average_attendance = serializers.FloatField(allow_null=True)
+    overall_average_marks = serializers.FloatField(allow_null=True)
+    courses = AdminBatchCourseSummarySerializer(many=True)

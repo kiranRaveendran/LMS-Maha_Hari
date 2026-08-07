@@ -176,3 +176,27 @@ path(
 #new
     path("admin/dashboard/", AdminDashboardStatsView.as_view(), name="admin-dashboard-stats"),
 ]
+
+
+from .views import AdminCourseListView, AdminLeaveRequestViewSet, AdminCoursePerformanceView, AdminBatchPerformanceView
+from .views import AdminAllCoursesPerformanceView
+
+
+admin_leave_list = AdminLeaveRequestViewSet.as_view({"get": "list"})
+admin_leave_detail = AdminLeaveRequestViewSet.as_view({"get": "retrieve", "patch": "partial_update"})
+
+urlpatterns += [
+    path("admin/courses/", AdminCourseListView.as_view(), name="admin-course-list"),
+    path("admin/leave-requests/", admin_leave_list, name="admin-leave-request-list"),
+    path("admin/leave-requests/<int:pk>/", admin_leave_detail, name="admin-leave-request-detail"),
+    path("admin/course-performance/", AdminCoursePerformanceView.as_view(), name="admin-course-performance"),
+    path("admin/courses-performance/", AdminAllCoursesPerformanceView.as_view(), name="admin-courses-performance"),
+    path("admin/batch-performance/", AdminBatchPerformanceView.as_view(), name="admin-batch-performance"),
+]
+
+
+from .views import AdminAllCoursesPerformanceView
+
+urlpatterns += [
+    
+]
