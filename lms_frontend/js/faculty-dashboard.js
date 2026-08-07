@@ -35,13 +35,13 @@ async function loadFacultyDashboard(isManualRefresh = false) {
 
     try {
 
-        const response = await axios.get(FACULTY_DASHBOARD_ENDPOINT, {
+        const response = await api.get(FACULTY_DASHBOARD_ENDPOINT, {
             headers: API.headers()
         });
 
         renderProfile(response.data.profile);
         renderStats(response.data);
-        renderExtraStats(response.data);
+        renderCourseBreakdown(response.data.course_breakdown);
         renderCourses(response.data.courses);
         updateLastUpdatedTimestamp();
 
@@ -89,22 +89,23 @@ function renderStats(data) {
 
 }
 
-function renderExtraStats(data) {
+function renderCourseBreakdown(courseBreakdown) {
 
-    const attendanceEl = document.getElementById("attendancePercent");
-    const marksEl = document.getElementById("averageMarks");
+    const tbody = document.getElementById("courseBreakdownBody");
+    if (!tbody) return;
 
-    if (attendanceEl) {
-        attendanceEl.textContent = data.attendance_percentage_this_month !== null
-            ? `${data.attendance_percentage_this_month}%`
-            : "—";
+    if (!courseBreakdown || courseBreakdown.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="3" class="text-center text-muted py-3">No courses assigned yet.</td></tr>`;
+        return;
     }
 
-    if (marksEl) {
-        marksEl.textContent = data.average_marks !== null
-            ? data.average_marks
-            : "—";
-    }
+    tbody.innerHTML = courseBreakdown.map(c => `
+        <tr>
+            <td>${c.course_name} <span class="text-muted small">(${c.course_code})</span></td>
+            <td>${c.attendance_percentage_this_month !== null ? c.attendance_percentage_this_month + "%" : "—"}</td>
+            <td>${c.average_marks !== null ? c.average_marks : "—"}</td>
+        </tr>
+    `).join("");
 
 }
 

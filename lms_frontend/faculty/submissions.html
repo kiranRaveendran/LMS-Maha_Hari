@@ -37,32 +37,41 @@
 
         <div class="card-body">
 
-            <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                    <thead class="table-light">
-                        <tr>
-                            <th>#</th>
-                            <th>Student</th>
-                            <th>Assignment</th>
-                            <th>File</th>
-                            <th>Submitted</th>
-                            <th>Grade</th>
-                            <th class="text-center">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="submissionTableBody">
-                        <tr>
-                            <td colspan="7" class="text-center py-5">
-                                <div class="text-muted">
-                                    <div class="spinner-border text-primary mb-3"></div>
-                                    <br>
-                                    Loading Submissions...
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+<style>
+    .card-grid-wrapper {
+        max-height: 560px;
+        overflow-y: auto;
+        padding-right: 6px;
+    }
+    .card-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 16px;
+    }
+    .item-card {
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 18px;
+        background: #fff;
+        transition: .2s;
+    }
+    .item-card:hover {
+        box-shadow: var(--shadow);
+        transform: translateY(-2px);
+    }
+    .card-grid-wrapper::-webkit-scrollbar { width: 8px; }
+    .card-grid-wrapper::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 20px; }
+</style>
+
+<div class="card-grid-wrapper">
+    <div class="card-grid" id="submissionTableBody">
+        <div class="text-center py-5 text-muted" style="grid-column: 1/-1;">
+            <div class="spinner-border text-primary mb-3"></div>
+            <br>
+            Loading Submissions...
+        </div>
+    </div>
+</div>
 
         </div>
     </div>
@@ -103,8 +112,12 @@
                     <input type="hidden" id="submissionId">
 
                     <div class="mb-3">
-                        <label class="form-label">Grade</label>
-                        <input type="number" step="0.01" min="0" id="grade" class="form-control">
+                        <label class="form-label">Marks (out of 100)</label>
+                        <div class="d-flex align-items-center gap-3">
+                            <input type="number" step="0.01" min="0" max="100" id="grade" class="form-control" style="max-width:150px;">
+                            <span id="gradeLetterPreview" class="badge bg-secondary">—</span>
+                        </div>
+                        <small class="text-muted">Pass mark: 40. S: 90-100, A: 75-89, B: 60-74, C: 40-59, F: 0-39.</small>
                         <div class="text-danger small mt-1" id="gradeError"></div>
                     </div>
 

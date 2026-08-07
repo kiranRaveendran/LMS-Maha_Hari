@@ -21,7 +21,7 @@
 
     <!-- CSS (root-relative — always resolves regardless of folder depth) -->
     <link rel="stylesheet" href="/css/admin.css">
-    <link rel="stylesheet" href="/css/responsive.css">
+    <!-- <link rel="stylesheet" href="/css/responsive.css"> -->
 
     <!-- Tailwind — scoped to the dashboard content section only,
          preflight disabled so it can't touch the Bootstrap-based shell -->
@@ -117,8 +117,8 @@
 
     </div>
 
-    <!-- Stage 8 — integrated summary stats -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-10">
+    <!-- Stage 8 — pending grading + per-course breakdown -->
+    <div class="grid grid-cols-1 sm:grid-cols-4 gap-5 mb-10">
 
         <div class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
             <div class="h-11 w-11 rounded-xl bg-orange-50 flex items-center justify-center mb-4">
@@ -129,20 +129,24 @@
             <p class="text-sm text-gray-500 mt-1 mb-0">Pending Grading</p>
         </div>
 
-        <div class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
-            <div class="h-11 w-11 rounded-xl bg-teal-50 flex items-center justify-center mb-4">
-                <i class="bi bi-calendar2-check text-teal-600 text-xl"></i>
+        <div class="sm:col-span-3 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+            <h3 class="text-base font-semibold text-gray-900 mb-4 mt-0">Per-Course Breakdown</h3>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead>
+                        <tr class="text-gray-500 small">
+                            <th>Course</th>
+                            <th>Attendance This Month</th>
+                            <th>Average Marks</th>
+                        </tr>
+                    </thead>
+                    <tbody id="courseBreakdownBody">
+                        <tr>
+                            <td colspan="3" class="text-center text-muted py-3">Loading...</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
-            <div class="text-3xl font-semibold text-gray-900" id="attendancePercent">—</div>
-            <p class="text-sm text-gray-500 mt-1 mb-0">Attendance This Month</p>
-        </div>
-
-        <div class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
-            <div class="h-11 w-11 rounded-xl bg-indigo-50 flex items-center justify-center mb-4">
-                <i class="bi bi-bar-chart-line text-indigo-600 text-xl"></i>
-            </div>
-            <div class="text-3xl font-semibold text-gray-900" id="averageMarks">—</div>
-            <p class="text-sm text-gray-500 mt-1 mb-0">Average Marks</p>
         </div>
 
     </div>

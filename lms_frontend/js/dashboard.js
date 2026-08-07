@@ -6,6 +6,7 @@
 // ===============================================================
 
 const DASHBOARD_ENDPOINT = `${API.BASE_URL}/api/accounts/admin/dashboard/`;
+const COURSES_PERFORMANCE_ENDPOINT = `${API.BASE_URL}/api/accounts/admin/courses-performance/`;
 
 // Maps API response keys -> the <div id="..."> that displays that number
 const STAT_CONFIG = [
@@ -18,11 +19,47 @@ const STAT_CONFIG = [
 
 document.addEventListener("DOMContentLoaded", () => {
     loadDashboardStats();
+    loadPerformanceOverview();
 
     document
         .getElementById("refreshDashboardBtn")
         ?.addEventListener("click", () => loadDashboardStats(true));
 });
+
+async function loadPerformanceOverview() {
+
+    const tbody = document.getElementById("performanceOverviewBody");
+    if (!tbody) return;
+
+    try {
+
+        const response = await api.get(COURSES_PERFORMANCE_ENDPOINT, {
+            headers: API.headers()
+        });
+
+        const courses = response.data;
+
+        if (!courses || courses.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="3" class="text-center text-muted py-3">No courses yet.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = courses.map(c => `
+            <tr>
+                <td>${c.course_name} <span class="text-muted small">(${c.course_code})</span></td>
+                <td>${c.class_average_attendance !== null ? c.class_average_attendance + "%" : "—"}</td>
+                <td>${c.class_average_marks !== null ? c.class_average_marks : "—"}</td>
+            </tr>
+        `).join("");
+
+    } catch (error) {
+
+        console.error(error);
+        tbody.innerHTML = `<tr><td colspan="3" class="text-center text-danger py-3">Failed to load.</td></tr>`;
+
+    }
+
+}
 
 // ===============================
 // Main fetch + render flow
@@ -42,7 +79,7 @@ async function loadDashboardStats(isManualRefresh = false) {
 
     try {
 
-        const response = await axios.get(DASHBOARD_ENDPOINT, {
+        const response = await api.get(DASHBOARD_ENDPOINT, {
             headers: { Authorization: `Bearer ${token}` }
         });
 

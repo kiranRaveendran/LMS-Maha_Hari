@@ -282,6 +282,8 @@ body {
 
     justify-content: space-between;
 
+    gap: 16px;
+
     padding: 0 30px;
 
     border-bottom: 1px solid var(--border);
@@ -296,6 +298,47 @@ body {
 
 }
 
+/* .topbar-left was used in every page's HTML but never had its own
+   rule here — as a flex child with no min-width set, it defaulted to
+   min-width:auto, which refuses to shrink below its content's natural
+   width. At 992px the sidebar-toggle button appears and adds extra
+   width right when space gets tight, pushing the title/subtitle out
+   past the header. min-width:0 + flex:1 lets it shrink properly;
+   the ellipsis rules on the title/subtitle handle genuinely long text. */
+.topbar-left {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 14px;
+
+    min-width: 0;
+
+    flex: 1;
+
+}
+
+.topbar-left > div {
+
+    min-width: 0;
+
+    overflow: hidden;
+
+}
+
+.topbar-left small {
+
+    display: block;
+
+    white-space: nowrap;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+}
+
 .page-title {
 
     margin: 0;
@@ -303,6 +346,45 @@ body {
     font-size: 24px;
 
     font-weight: 700;
+
+    white-space: nowrap;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+}
+
+.topbar-left {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 16px;
+
+    min-width: 0;
+
+    flex: 1;
+
+}
+
+.topbar-left > div {
+
+    min-width: 0;
+
+}
+
+.topbar-left .page-title,
+.topbar-left small {
+
+    white-space: nowrap;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+    display: block;
 
 }
 
@@ -313,6 +395,8 @@ body {
     align-items: center;
 
     gap: 20px;
+
+    flex-shrink: 0;
 
 }
 

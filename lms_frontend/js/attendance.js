@@ -13,7 +13,6 @@ const DASHBOARD_ENDPOINT = `${API.BASE_URL}/api/faculty/dashboard/`;
 
 let courseSelect;
 let dateInput;
-let loadRosterBtn;
 let rosterContainer;
 let saveRosterWrapper;
 let saveRosterBtn;
@@ -21,7 +20,6 @@ let saveRosterBtn;
 let calendarCourseSelect;
 let calendarStudentSelect;
 let calendarMonthInput;
-let loadCalendarBtn;
 let calendarContainer;
 
 let allCourses = [];
@@ -42,7 +40,6 @@ function initialize() {
 
     courseSelect = document.getElementById("courseSelect");
     dateInput = document.getElementById("dateInput");
-    loadRosterBtn = document.getElementById("loadRosterBtn");
     rosterContainer = document.getElementById("rosterContainer");
     saveRosterWrapper = document.getElementById("saveRosterWrapper");
     saveRosterBtn = document.getElementById("saveRosterBtn");
@@ -50,7 +47,6 @@ function initialize() {
     calendarCourseSelect = document.getElementById("calendarCourseSelect");
     calendarStudentSelect = document.getElementById("calendarStudentSelect");
     calendarMonthInput = document.getElementById("calendarMonthInput");
-    loadCalendarBtn = document.getElementById("loadCalendarBtn");
     calendarContainer = document.getElementById("calendarContainer");
 
     dateInput.value = new Date().toISOString().slice(0, 10);
@@ -63,16 +59,35 @@ function initialize() {
 
 function registerEvents() {
 
-    loadRosterBtn.addEventListener("click", loadRoster);
     saveRosterBtn.addEventListener("click", saveRoster);
+    courseSelect.addEventListener("change", maybeAutoLoadRoster);
+    dateInput.addEventListener("change", maybeAutoLoadRoster);
 
     calendarCourseSelect.addEventListener("change", loadStudentsForCalendar);
-    loadCalendarBtn.addEventListener("click", loadCalendar);
+    calendarStudentSelect.addEventListener("change", maybeAutoLoadCalendar);
+    calendarMonthInput.addEventListener("change", maybeAutoLoadCalendar);
     document.getElementById("dayEditSaveBtn").addEventListener("click", saveDayEdit);
     document.getElementById("dayEditClearBtn").addEventListener("click", showClearConfirm);
     document.getElementById("dayEditClearCancelBtn").addEventListener("click", hideClearConfirm);
     document.getElementById("dayEditClearConfirmBtn").addEventListener("click", confirmClearDayRecord);
 
+}
+
+// Auto-loads the daily marking roster via AJAX as soon as both a course
+// and date are selected — no need to click Load manually. The button
+// still works too, as a manual re-fetch/refresh option.
+function maybeAutoLoadRoster() {
+    if (courseSelect.value && dateInput.value) {
+        loadRoster();
+    }
+}
+
+// Auto-loads the monthly calendar via AJAX once course, student, and
+// month are all selected — no need to click a Load/refresh button.
+function maybeAutoLoadCalendar() {
+    if (calendarCourseSelect.value && calendarStudentSelect.value && calendarMonthInput.value) {
+        loadCalendar();
+    }
 }
 
 // ===============================
@@ -83,7 +98,7 @@ async function loadCourses() {
 
     try {
 
-        const response = await axios.get(DASHBOARD_ENDPOINT, {
+        const response = await api.get(DASHBOARD_ENDPOINT, {
             headers: API.headers()
         });
 
@@ -111,7 +126,7 @@ async function loadRoster() {
     const date = dateInput.value;
 
     if (!courseId || !date) {
-        alert("Please select a course and date.");
+        showSuccessMessage("Please select a course and date.", true);
         return;
     }
 
@@ -122,7 +137,7 @@ async function loadRoster() {
 
     try {
 
-        const response = await axios.get(ROSTER_ENDPOINT, {
+        const response = await api.get(ROSTER_ENDPOINT, {
             headers: API.headers(),
             params: { course: courseId, date: date }
         });
@@ -194,7 +209,7 @@ async function saveRoster() {
         .filter(Boolean);
 
     if (records.length === 0) {
-        alert("Mark at least one student before saving.");
+        showSuccessMessage("Mark at least one student before saving.", true);
         return;
     }
 
@@ -203,7 +218,7 @@ async function saveRoster() {
 
     try {
 
-        await axios.post(BULK_MARK_ENDPOINT, {
+        await api.post(BULK_MARK_ENDPOINT, {
             course: courseId,
             date: date,
             records: records
@@ -217,7 +232,7 @@ async function saveRoster() {
     } catch (error) {
 
         console.error(error);
-        alert("Failed to save attendance.");
+        showSuccessMessage("Failed to save attendance.", true);
 
     } finally {
 
@@ -250,7 +265,7 @@ async function loadStudentsForCalendar() {
         // student/student_username off the response, not status.
         const today = new Date().toISOString().slice(0, 10);
 
-        const response = await axios.get(ROSTER_ENDPOINT, {
+        const response = await api.get(ROSTER_ENDPOINT, {
             headers: API.headers(),
             params: { course: courseId, date: today }
         });
@@ -278,7 +293,7 @@ async function loadCalendar() {
     const month = calendarMonthInput.value; // "YYYY-MM"
 
     if (!courseId || !studentId || !month) {
-        alert("Please select a course, student, and month.");
+        showSuccessMessage("Please select a course, student, and month.", true);
         return;
     }
 
@@ -293,7 +308,7 @@ async function loadCalendar() {
         // exists on the backend, so we fetch everything for the course
         // and narrow to this student + month on the client. Simpler than
         // adding a new backend filter for what's a small dataset per course.
-        const response = await axios.get(ATTENDANCE_ENDPOINT, {
+        const response = await api.get(ATTENDANCE_ENDPOINT, {
             headers: API.headers(),
             params: { course: courseId }
         });
@@ -433,7 +448,7 @@ async function saveDayEdit() {
     const checked = document.querySelector('input[name="dayEditStatus"]:checked');
 
     if (!checked) {
-        alert("Select Present or Absent.");
+        showSuccessMessage("Select Present or Absent.", true);
         return;
     }
 
@@ -443,7 +458,7 @@ async function saveDayEdit() {
 
     try {
 
-        await axios.post(BULK_MARK_ENDPOINT, {
+        await api.post(BULK_MARK_ENDPOINT, {
             course: calendarCourseSelect.value,
             date: dayEditDate,
             records: [{ student: calendarStudentSelect.value, status: checked.value }]
@@ -458,7 +473,7 @@ async function saveDayEdit() {
     } catch (error) {
 
         console.error(error);
-        alert("Failed to save.");
+        showSuccessMessage("Failed to save.", true);
 
     } finally {
 
@@ -487,7 +502,7 @@ async function confirmClearDayRecord() {
 
     try {
 
-        await axios.delete(`${ATTENDANCE_ENDPOINT}${dayEditRecordId}/`, {
+        await api.delete(`${ATTENDANCE_ENDPOINT}${dayEditRecordId}/`, {
             headers: API.headers()
         });
 

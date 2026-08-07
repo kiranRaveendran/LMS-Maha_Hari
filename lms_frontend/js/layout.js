@@ -19,8 +19,9 @@ const NAV_ITEMS = [
   { label: "Academic Managers",  icon: "bi-person-workspace",  href: "/admin/academic-managers.html", key: "academic-managers" },
   { label: "Faculty",            icon: "bi-person-workspace",  href: "/admin/faculty.html",          key: "faculty" },
   { label: "Students",           icon: "bi-mortarboard",       href: "/admin/students.html",         key: "students" },
-  { label: "Courses",            icon: "bi-book-half",         href: "#",                            key: "courses" },
-  { label: "Leave Requests",     icon: "bi-calendar-check",    href: "#",                            key: "leave-requests" },
+  { label: "Courses",            icon: "bi-book-half",         href: "/admin/courses.html",          key: "courses" },
+  { label: "Leave Requests",     icon: "bi-calendar-check",    href: "/admin/leave-requests.html",   key: "leave-requests" },
+  { label: "Performance",        icon: "bi-graph-up",          href: "/admin/performance.html",      key: "performance" },
 ];
 
 function renderLayout({ pageTitle, active }) {

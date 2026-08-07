@@ -67,7 +67,7 @@ async function loadCourses() {
 
     try {
 
-        const response = await axios.get(DASHBOARD_ENDPOINT, {
+        const response = await api.get(DASHBOARD_ENDPOINT, {
             headers: API.headers()
         });
 
@@ -108,7 +108,7 @@ async function editMaterial(id) {
 
     try {
 
-        const response = await axios.get(`${MATERIALS_ENDPOINT}${id}/`, {
+        const response = await api.get(`${MATERIALS_ENDPOINT}${id}/`, {
             headers: API.headers()
         });
 
@@ -144,7 +144,7 @@ async function loadMaterials() {
 
     try {
 
-        const response = await axios.get(MATERIALS_ENDPOINT, {
+        const response = await api.get(MATERIALS_ENDPOINT, {
             headers: API.headers()
         });
 
@@ -269,11 +269,11 @@ async function saveMaterial() {
     try {
 
         if (editingMaterialId) {
-            await axios.patch(`${MATERIALS_ENDPOINT}${editingMaterialId}/`, formData, {
+            await api.patch(`${MATERIALS_ENDPOINT}${editingMaterialId}/`, formData, {
                 headers: API.headers()
             });
         } else {
-            await axios.post(MATERIALS_ENDPOINT, formData, {
+            await api.post(MATERIALS_ENDPOINT, formData, {
                 headers: API.headers()
             });
         }
@@ -325,7 +325,7 @@ async function deleteMaterial() {
 
     try {
 
-        await axios.delete(`${MATERIALS_ENDPOINT}${deleteMaterialId}/`, {
+        await api.delete(`${MATERIALS_ENDPOINT}${deleteMaterialId}/`, {
             headers: API.headers()
         });
 

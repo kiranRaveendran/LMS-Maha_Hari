@@ -66,7 +66,7 @@ async function loadCourses() {
 
     try {
 
-        const response = await axios.get(DASHBOARD_ENDPOINT, {
+        const response = await api.get(DASHBOARD_ENDPOINT, {
             headers: API.headers()
         });
 
@@ -102,7 +102,7 @@ async function editAssignment(id) {
 
     try {
 
-        const response = await axios.get(`${ASSIGNMENTS_ENDPOINT}${id}/`, {
+        const response = await api.get(`${ASSIGNMENTS_ENDPOINT}${id}/`, {
             headers: API.headers()
         });
 
@@ -157,7 +157,7 @@ async function loadAssignments() {
 
     try {
 
-        const response = await axios.get(ASSIGNMENTS_ENDPOINT, {
+        const response = await api.get(ASSIGNMENTS_ENDPOINT, {
             headers: API.headers()
         });
 
@@ -188,30 +188,37 @@ function renderTable(assignments) {
 
     tableBody.innerHTML = "";
 
-    assignments.forEach((assignment, index) => {
+    assignments.forEach((assignment) => {
 
         const course = allCourses.find(c => c.id === assignment.course);
         const courseLabel = course ? `${course.name} (${course.code})${course.batch_name ? " — " + course.batch_name : ""}` : `Course #${assignment.course}`;
         const dueDate = new Date(assignment.due_date).toLocaleString();
+        const description = assignment.description
+            ? (assignment.description.length > 80 ? assignment.description.slice(0, 80) + "…" : assignment.description)
+            : `<span class="text-muted">No description</span>`;
 
         tableBody.innerHTML += `
-        <tr>
-            <td>${index + 1}</td>
-            <td><strong>${assignment.title}</strong></td>
-            <td>${courseLabel}</td>
-            <td>${dueDate}</td>
-            <td class="text-center">
-                <a href="/faculty/submissions.html?assignment=${assignment.id}" class="btn btn-sm btn-outline-secondary me-2" title="View Submissions">
+        <div class="item-card">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <span class="badge bg-primary-subtle text-primary" style="max-width:170px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${courseLabel}">${courseLabel}</span>
+            </div>
+            <h6 class="fw-bold mb-1">${assignment.title}</h6>
+            <p class="text-muted small mb-3">${description}</p>
+            <div class="d-flex align-items-center text-muted small mb-3">
+                <i class="bi bi-calendar-event me-1"></i> Due ${dueDate}
+            </div>
+            <div class="d-flex gap-2">
+                <a href="/faculty/submissions.html?assignment=${assignment.id}" class="btn btn-sm btn-outline-secondary flex-fill" title="View Submissions">
                     <i class="bi bi-inbox"></i>
                 </a>
-                <button class="btn btn-sm btn-outline-primary me-2 edit-btn" data-id="${assignment.id}">
+                <button class="btn btn-sm btn-outline-primary flex-fill edit-btn" data-id="${assignment.id}">
                     <i class="bi bi-pencil"></i>
                 </button>
-                <button class="btn btn-sm btn-outline-danger delete-btn" data-id="${assignment.id}">
+                <button class="btn btn-sm btn-outline-danger flex-fill delete-btn" data-id="${assignment.id}">
                     <i class="bi bi-trash"></i>
                 </button>
-            </td>
-        </tr>
+            </div>
+        </div>
         `;
 
     });
@@ -231,25 +238,25 @@ function renderTable(assignments) {
 
 function showLoading() {
     tableBody.innerHTML = `
-    <tr><td colspan="5" class="text-center py-5">
+    <div class="text-center py-5" style="grid-column: 1/-1;">
         <div class="spinner-border text-primary"></div>
         <p class="mt-3">Loading Assignments...</p>
-    </td></tr>`;
+    </div>`;
 }
 
 function showEmptyState() {
     tableBody.innerHTML = `
-    <tr><td colspan="5" class="text-center py-5 text-muted">
+    <div class="text-center py-5 text-muted" style="grid-column: 1/-1;">
         <i class="bi bi-clipboard-x fs-1"></i><br><br>
         No Assignments Found
-    </td></tr>`;
+    </div>`;
 }
 
 function showError() {
     tableBody.innerHTML = `
-    <tr><td colspan="5" class="text-center text-danger py-5">
+    <div class="text-center text-danger py-5" style="grid-column: 1/-1;">
         Failed to load Assignments.
-    </td></tr>`;
+    </div>`;
 }
 
 // ===============================
@@ -275,11 +282,11 @@ async function saveAssignment() {
     try {
 
         if (editingAssignmentId) {
-            await axios.patch(`${ASSIGNMENTS_ENDPOINT}${editingAssignmentId}/`, payload, {
+            await api.patch(`${ASSIGNMENTS_ENDPOINT}${editingAssignmentId}/`, payload, {
                 headers: API.headers()
             });
         } else {
-            await axios.post(ASSIGNMENTS_ENDPOINT, payload, {
+            await api.post(ASSIGNMENTS_ENDPOINT, payload, {
                 headers: API.headers()
             });
         }
@@ -331,7 +338,7 @@ async function deleteAssignment() {
 
     try {
 
-        await axios.delete(`${ASSIGNMENTS_ENDPOINT}${deleteAssignmentId}/`, {
+        await api.delete(`${ASSIGNMENTS_ENDPOINT}${deleteAssignmentId}/`, {
             headers: API.headers()
         });
 

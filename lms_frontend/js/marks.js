@@ -19,7 +19,6 @@ const EXAM_TYPE_LABELS = {
 
 let courseSelect;
 let examTypeSelect;
-let loadRosterBtn;
 let rosterContainer;
 let saveRosterWrapper;
 let saveRosterBtn;
@@ -29,6 +28,37 @@ let editMarkModal;
 
 let allCourses = [];
 let currentRoster = [];
+
+// ===============================
+// Letter grade mapping — same scale as Submissions. Display only,
+// the stored value is always the numeric marks (0-100).
+// ===============================
+
+function getLetterGrade(marks) {
+
+    const m = Number(marks);
+    if (marks === null || marks === undefined || marks === "" || isNaN(m)) return null;
+
+    if (m >= 90) return "S";
+    if (m >= 75) return "A";
+    if (m >= 60) return "B";
+    if (m >= 40) return "C";
+    return "F";
+
+}
+
+function getLetterGradeBadgeClass(letter) {
+
+    switch (letter) {
+        case "S": return "bg-success";
+        case "A": return "bg-primary";
+        case "B": return "bg-info text-dark";
+        case "C": return "bg-warning text-dark";
+        case "F": return "bg-danger";
+        default: return "bg-secondary";
+    }
+
+}
 
 // ===============================
 // Initialize
@@ -45,13 +75,13 @@ function initialize() {
 
     courseSelect = document.getElementById("courseSelect");
     examTypeSelect = document.getElementById("examTypeSelect");
-    loadRosterBtn = document.getElementById("loadRosterBtn");
     rosterContainer = document.getElementById("rosterContainer");
     saveRosterWrapper = document.getElementById("saveRosterWrapper");
     saveRosterBtn = document.getElementById("saveRosterBtn");
     recordsTableBody = document.getElementById("recordsTableBody");
 
     editMarkModal = new bootstrap.Modal(document.getElementById("editMarkModal"));
+    document.getElementById("editMarkValue").addEventListener("input", updateEditMarkGradePreview);
 
     registerEvents();
     loadCourses();
@@ -60,11 +90,20 @@ function initialize() {
 
 function registerEvents() {
 
-    loadRosterBtn.addEventListener("click", loadRoster);
     saveRosterBtn.addEventListener("click", saveRoster);
-    courseSelect.addEventListener("change", loadRecords);
+    courseSelect.addEventListener("change", () => { loadRecords(); maybeAutoLoadRoster(); });
+    examTypeSelect.addEventListener("change", maybeAutoLoadRoster);
     document.getElementById("editMarkSaveBtn").addEventListener("click", saveEditedMark);
 
+}
+
+// Auto-loads the roster via AJAX as soon as both a course and exam type
+// are selected — no need to click Load manually. The button still works
+// too, as a manual re-fetch/refresh option.
+function maybeAutoLoadRoster() {
+    if (courseSelect.value && examTypeSelect.value) {
+        loadRoster();
+    }
 }
 
 // ===============================
@@ -75,7 +114,7 @@ async function loadCourses() {
 
     try {
 
-        const response = await axios.get(DASHBOARD_ENDPOINT, {
+        const response = await api.get(DASHBOARD_ENDPOINT, {
             headers: API.headers()
         });
 
@@ -100,7 +139,7 @@ async function loadRoster() {
     const examType = examTypeSelect.value;
 
     if (!courseId || !examType) {
-        alert("Please select a course and exam type.");
+        showSuccessMessage("Please select a course and exam type.", true);
         return;
     }
 
@@ -111,7 +150,7 @@ async function loadRoster() {
 
     try {
 
-        const response = await axios.get(ROSTER_ENDPOINT, {
+        const response = await api.get(ROSTER_ENDPOINT, {
             headers: API.headers(),
             params: { course: courseId, exam_type: examType }
         });
@@ -143,7 +182,8 @@ function renderRoster(roster) {
                 <thead class="table-light">
                     <tr>
                         <th>Student</th>
-                        <th style="width:180px;">Marks</th>
+                        <th style="width:180px;">Marks (out of 100)</th>
+                        <th style="width:100px;">Grade</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -152,11 +192,16 @@ function renderRoster(roster) {
                             <td>${entry.student_username}</td>
                             <td>
                                 <input
-                                    type="number" step="0.01" min="0"
+                                    type="number" step="0.01" min="0" max="100"
                                     class="form-control roster-marks-input"
                                     data-student="${entry.student}"
                                     value="${entry.marks !== null && entry.marks !== undefined ? entry.marks : ""}"
                                     placeholder="Not entered">
+                            </td>
+                            <td>
+                                <span class="badge ${getLetterGradeBadgeClass(getLetterGrade(entry.marks))} roster-grade-badge" data-student="${entry.student}">
+                                    ${getLetterGrade(entry.marks) || "—"}
+                                </span>
                             </td>
                         </tr>
                     `).join("")}
@@ -166,6 +211,16 @@ function renderRoster(roster) {
     `;
 
     saveRosterWrapper.style.display = "block";
+
+    document.querySelectorAll(".roster-marks-input").forEach(input => {
+        input.addEventListener("input", () => {
+            const badge = document.querySelector(`.roster-grade-badge[data-student="${input.dataset.student}"]`);
+            const letter = getLetterGrade(input.value);
+            badge.textContent = letter || "—";
+            badge.className = `badge ${getLetterGradeBadgeClass(letter)} roster-grade-badge`;
+            badge.dataset.student = input.dataset.student;
+        });
+    });
 
 }
 
@@ -181,8 +236,14 @@ async function saveRoster() {
         })
         .filter(Boolean);
 
+    const invalid = records.some(r => Number(r.marks) < 0 || Number(r.marks) > 100);
+    if (invalid) {
+        showSuccessMessage("All marks must be between 0 and 100.", true);
+        return;
+    }
+
     if (records.length === 0) {
-        alert("Enter marks for at least one student before saving.");
+        showSuccessMessage("Enter marks for at least one student before saving.", true);
         return;
     }
 
@@ -191,7 +252,7 @@ async function saveRoster() {
 
     try {
 
-        await axios.post(BULK_SAVE_ENDPOINT, {
+        await api.post(BULK_SAVE_ENDPOINT, {
             course: courseId,
             exam_type: examType,
             records: records
@@ -206,7 +267,7 @@ async function saveRoster() {
     } catch (error) {
 
         console.error(error);
-        alert("Failed to save marks.");
+        showSuccessMessage("Failed to save marks.", true);
 
     } finally {
 
@@ -227,20 +288,20 @@ async function loadRecords() {
 
     if (!courseId) {
         recordsTableBody.innerHTML = `
-        <tr><td colspan="5" class="text-center py-5 text-muted">
+        <tr><td colspan="6" class="text-center py-5 text-muted">
             Select a course above to see its marks records.
         </td></tr>`;
         return;
     }
 
     recordsTableBody.innerHTML = `
-    <tr><td colspan="5" class="text-center py-5">
+    <tr><td colspan="6" class="text-center py-5">
         <div class="spinner-border text-primary"></div>
     </td></tr>`;
 
     try {
 
-        const response = await axios.get(MARKS_ENDPOINT, {
+        const response = await api.get(MARKS_ENDPOINT, {
             headers: API.headers(),
             params: { course: courseId }
         });
@@ -251,7 +312,7 @@ async function loadRecords() {
 
         console.error(error);
         recordsTableBody.innerHTML = `
-        <tr><td colspan="5" class="text-center text-danger py-5">
+        <tr><td colspan="6" class="text-center text-danger py-5">
             Failed to load records.
         </td></tr>`;
 
@@ -263,7 +324,7 @@ function renderRecords(records) {
 
     if (!records || records.length === 0) {
         recordsTableBody.innerHTML = `
-        <tr><td colspan="5" class="text-center py-5 text-muted">
+        <tr><td colspan="6" class="text-center py-5 text-muted">
             <i class="bi bi-clipboard-x fs-1"></i><br><br>
             No marks recorded yet for this course.
         </td></tr>`;
@@ -280,6 +341,7 @@ function renderRecords(records) {
             <td>${record.student_username}</td>
             <td>${EXAM_TYPE_LABELS[record.exam_type] || record.exam_type}</td>
             <td>${record.marks}</td>
+            <td><span class="badge ${getLetterGradeBadgeClass(getLetterGrade(record.marks))}">${getLetterGrade(record.marks) || "—"}</span></td>
             <td class="text-center actions-cell">
                 <button class="btn btn-sm btn-outline-primary me-2 edit-mark-btn"
                     data-id="${record.id}"
@@ -329,7 +391,7 @@ async function deleteMark(id) {
 
     try {
 
-        await axios.delete(`${MARKS_ENDPOINT}${id}/`, {
+        await api.delete(`${MARKS_ENDPOINT}${id}/`, {
             headers: API.headers()
         });
 
@@ -349,12 +411,25 @@ async function deleteMark(id) {
 // Edit single mark modal
 // ===============================
 
+function updateEditMarkGradePreview() {
+
+    const value = document.getElementById("editMarkValue").value;
+    const preview = document.getElementById("editMarkGradePreview");
+    const letter = getLetterGrade(value);
+
+    preview.textContent = letter || "—";
+    preview.className = `badge ${getLetterGradeBadgeClass(letter)}`;
+
+}
+
 function openEditMarkModal(data) {
 
     document.getElementById("editMarkId").value = data.id;
     document.getElementById("editMarkSubtitle").textContent = `${data.student} — ${data.examType}`;
     document.getElementById("editMarkValue").value = data.marks;
     document.getElementById("editMarkError").textContent = "";
+
+    updateEditMarkGradePreview();
 
     editMarkModal.show();
 
@@ -365,8 +440,8 @@ async function saveEditedMark() {
     const id = document.getElementById("editMarkId").value;
     const value = document.getElementById("editMarkValue").value;
 
-    if (value === "" || Number(value) < 0) {
-        document.getElementById("editMarkError").textContent = "Enter a valid mark.";
+    if (value === "" || Number(value) < 0 || Number(value) > 100) {
+        document.getElementById("editMarkError").textContent = "Marks must be between 0 and 100.";
         return;
     }
 
@@ -376,7 +451,7 @@ async function saveEditedMark() {
 
     try {
 
-        await axios.patch(`${MARKS_ENDPOINT}${id}/`, { marks: value }, {
+        await api.patch(`${MARKS_ENDPOINT}${id}/`, { marks: value }, {
             headers: API.headers()
         });
 

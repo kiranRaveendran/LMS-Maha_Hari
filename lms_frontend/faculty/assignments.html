@@ -12,7 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="/css/admin.css">
-    <link rel="stylesheet" href="/css/responsive.css">
+    <!-- <link rel="stylesheet" href="/css/responsive.css"> -->
 </head>
 <body>
 
@@ -38,30 +38,41 @@
 
         <div class="card-body">
 
-            <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                    <thead class="table-light">
-                        <tr>
-                            <th>#</th>
-                            <th>Title</th>
-                            <th>Course</th>
-                            <th>Due Date</th>
-                            <th class="text-center">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="assignmentTableBody">
-                        <tr>
-                            <td colspan="5" class="text-center py-5">
-                                <div class="text-muted">
-                                    <div class="spinner-border text-primary mb-3"></div>
-                                    <br>
-                                    Loading Assignments...
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+<style>
+    .card-grid-wrapper {
+        max-height: 560px;
+        overflow-y: auto;
+        padding-right: 6px;
+    }
+    .card-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 16px;
+    }
+    .item-card {
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 18px;
+        background: #fff;
+        transition: .2s;
+    }
+    .item-card:hover {
+        box-shadow: var(--shadow);
+        transform: translateY(-2px);
+    }
+    .card-grid-wrapper::-webkit-scrollbar { width: 8px; }
+    .card-grid-wrapper::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 20px; }
+</style>
+
+<div class="card-grid-wrapper">
+    <div class="card-grid" id="assignmentTableBody">
+        <div class="text-center py-5 text-muted" style="grid-column: 1/-1;">
+            <div class="spinner-border text-primary mb-3"></div>
+            <br>
+            Loading Assignments...
+        </div>
+    </div>
+</div>
 
         </div>
     </div>

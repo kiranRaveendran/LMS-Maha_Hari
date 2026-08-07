@@ -19,6 +19,7 @@ const FACULTY_NAV_ITEMS = [
   { label: "Attendance",         icon: "bi-calendar2-check",  href: "/faculty/attendance.html",             key: "attendance" },
   { label: "Marks",              icon: "bi-bar-chart-line",   href: "/faculty/marks.html",                  key: "marks" },
   { label: "Leave Management",   icon: "bi-calendar-check",   href: "/faculty/leave-history.html",          key: "leave-history" },
+  { label: "Student Leave Requests", icon: "bi-person-check", href: "/faculty/student-leave-requests.html", key: "student-leave-requests" },
 ];
 
 function renderFacultyLayout({ pageTitle, active }) {

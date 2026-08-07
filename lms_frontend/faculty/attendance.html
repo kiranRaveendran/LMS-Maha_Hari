@@ -30,25 +30,20 @@
         <div class="card-body">
 
             <div class="row g-3 mb-4">
-                <div class="col-md-6">
+                <div class="col-md-7">
                     <label class="form-label">Course</label>
                     <select id="courseSelect" class="form-control">
                         <option value="">Select a course...</option>
                     </select>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-5">
                     <label class="form-label">Date</label>
                     <input type="date" id="dateInput" class="form-control">
-                </div>
-                <div class="col-md-2 d-flex align-items-end">
-                    <button id="loadRosterBtn" class="btn btn-outline-primary w-100">
-                        <i class="bi bi-arrow-repeat me-1"></i> Load
-                    </button>
                 </div>
             </div>
 
             <div id="rosterContainer">
-                <p class="text-muted text-center py-4">Select a course and date, then click Load.</p>
+                <p class="text-muted text-center py-4">Select a course and date to load the roster.</p>
             </div>
 
             <div class="text-end mt-3" id="saveRosterWrapper" style="display:none;">
@@ -72,7 +67,7 @@
         <div class="card-body">
 
             <div class="row g-3 mb-4">
-                <div class="col-md-4">
+                <div class="col-md-5">
                     <label class="form-label">Course</label>
                     <select id="calendarCourseSelect" class="form-control">
                         <option value="">Select a course...</option>
@@ -87,11 +82,6 @@
                 <div class="col-md-3">
                     <label class="form-label">Month</label>
                     <input type="month" id="calendarMonthInput" class="form-control">
-                </div>
-                <div class="col-md-1 d-flex align-items-end">
-                    <button id="loadCalendarBtn" class="btn btn-outline-primary w-100">
-                        <i class="bi bi-arrow-repeat"></i>
-                    </button>
                 </div>
             </div>
 

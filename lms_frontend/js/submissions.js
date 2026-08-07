@@ -18,6 +18,52 @@ let allAssignments = [];
 let editingSubmissionId = null;
 
 // ===============================
+// Letter grade mapping — display only, marks (0-100) are what's
+// actually stored. Pass mark is 40 (C and above pass, F fails).
+// ===============================
+
+function getLetterGrade(marks) {
+
+    const m = Number(marks);
+    if (isNaN(m)) return null;
+
+    if (m >= 90) return "S";
+    if (m >= 75) return "A";
+    if (m >= 60) return "B";
+    if (m >= 40) return "C";
+    return "F";
+
+}
+
+function getLetterGradeBadgeClass(letter) {
+
+    switch (letter) {
+        case "S": return "bg-success";
+        case "A": return "bg-primary";
+        case "B": return "bg-info text-dark";
+        case "C": return "bg-warning text-dark";
+        case "F": return "bg-danger";
+        default: return "bg-secondary";
+    }
+
+}
+
+// ===============================
+// Late detection — compares a submission's submitted_at against its
+// assignment's due_date (looked up from allAssignments, already loaded
+// for the filter dropdown — no extra API call needed).
+// ===============================
+
+function isSubmissionLate(submission) {
+
+    const assignment = allAssignments.find(a => a.id === submission.assignment);
+    if (!assignment || !assignment.due_date) return null;
+
+    return new Date(submission.submitted_at) > new Date(assignment.due_date);
+
+}
+
+// ===============================
 // Initialize
 // ===============================
 
@@ -35,6 +81,8 @@ function initialize() {
     saveGradeBtn = document.getElementById("saveGradeBtn");
 
     gradeModal = new bootstrap.Modal(document.getElementById("gradeModal"));
+
+    document.getElementById("grade").addEventListener("input", updateGradeLetterPreview);
 
     registerEvents();
     loadAssignmentsForFilter();
@@ -66,7 +114,7 @@ async function loadAssignmentsForFilter() {
 
     try {
 
-        const response = await axios.get(ASSIGNMENTS_ENDPOINT, {
+        const response = await api.get(ASSIGNMENTS_ENDPOINT, {
             headers: API.headers()
         });
 
@@ -102,7 +150,7 @@ async function loadSubmissions(assignmentId) {
             ? `${SUBMISSIONS_ENDPOINT}?assignment=${assignmentId}`
             : SUBMISSIONS_ENDPOINT;
 
-        const response = await axios.get(url, {
+        const response = await api.get(url, {
             headers: API.headers()
         });
 
@@ -133,31 +181,49 @@ function renderTable(submissions) {
 
     tableBody.innerHTML = "";
 
-    submissions.forEach((submission, index) => {
+    submissions.forEach((submission) => {
 
         const submittedDate = new Date(submission.submitted_at).toLocaleString();
-        const gradeDisplay = submission.grade !== null && submission.grade !== undefined
-            ? submission.grade
-            : `<span class="text-muted">Not graded</span>`;
+
+        let gradeBadge;
+        if (submission.grade !== null && submission.grade !== undefined) {
+            const letter = getLetterGrade(submission.grade);
+            gradeBadge = `<span class="badge ${getLetterGradeBadgeClass(letter)}">${letter} (${submission.grade})</span>`;
+        } else {
+            gradeBadge = `<span class="badge bg-secondary">Not graded</span>`;
+        }
+
+        const late = isSubmissionLate(submission);
+        const lateBadge = late === null
+            ? ""
+            : late
+                ? `<span class="badge bg-danger">Late</span>`
+                : `<span class="badge bg-success">On Time</span>`;
 
         tableBody.innerHTML += `
-        <tr>
-            <td>${index + 1}</td>
-            <td><strong>${submission.student_username}</strong></td>
-            <td>${submission.assignment_title}</td>
-            <td>
-                <a href="${submission.file}" target="_blank" class="text-primary">
-                    <i class="bi bi-file-earmark-arrow-down me-1"></i>View
+        <div class="item-card">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                    <h6 class="fw-bold mb-0">${submission.student_username}</h6>
+                    <p class="text-muted small mb-0">${submission.assignment_title}</p>
+                </div>
+                <div class="d-flex flex-column gap-1 align-items-end">
+                    ${gradeBadge}
+                    ${lateBadge}
+                </div>
+            </div>
+            <p class="text-muted small mb-3">
+                <i class="bi bi-clock me-1"></i>Submitted ${submittedDate}
+            </p>
+            <div class="d-flex gap-2">
+                <a href="${submission.file}" target="_blank" class="btn btn-sm btn-outline-secondary flex-fill">
+                    <i class="bi bi-file-earmark-arrow-down me-1"></i>View File
                 </a>
-            </td>
-            <td>${submittedDate}</td>
-            <td>${gradeDisplay}</td>
-            <td class="text-center">
-                <button class="btn btn-sm btn-outline-primary grade-btn" data-id="${submission.id}">
+                <button class="btn btn-sm btn-primary flex-fill grade-btn" data-id="${submission.id}">
                     <i class="bi bi-pencil-square me-1"></i>Grade
                 </button>
-            </td>
-        </tr>
+            </div>
+        </div>
         `;
 
     });
@@ -173,30 +239,47 @@ function renderTable(submissions) {
 
 function showLoading() {
     tableBody.innerHTML = `
-    <tr><td colspan="7" class="text-center py-5">
+    <div class="text-center py-5" style="grid-column: 1/-1;">
         <div class="spinner-border text-primary"></div>
         <p class="mt-3">Loading Submissions...</p>
-    </td></tr>`;
+    </div>`;
 }
 
 function showEmptyState() {
     tableBody.innerHTML = `
-    <tr><td colspan="7" class="text-center py-5 text-muted">
+    <div class="text-center py-5 text-muted" style="grid-column: 1/-1;">
         <i class="bi bi-inbox fs-1"></i><br><br>
         No Submissions Found
-    </td></tr>`;
+    </div>`;
 }
 
 function showError() {
     tableBody.innerHTML = `
-    <tr><td colspan="7" class="text-center text-danger py-5">
+    <div class="text-center text-danger py-5" style="grid-column: 1/-1;">
         Failed to load Submissions.
-    </td></tr>`;
+    </div>`;
 }
 
 // ===============================
 // Grade modal
 // ===============================
+
+function updateGradeLetterPreview() {
+
+    const value = document.getElementById("grade").value;
+    const preview = document.getElementById("gradeLetterPreview");
+
+    if (value === "") {
+        preview.textContent = "—";
+        preview.className = "badge bg-secondary";
+        return;
+    }
+
+    const letter = getLetterGrade(value);
+    preview.textContent = letter || "—";
+    preview.className = `badge ${getLetterGradeBadgeClass(letter)}`;
+
+}
 
 function openGradeModal(submission) {
 
@@ -208,6 +291,8 @@ function openGradeModal(submission) {
     document.getElementById("gradeFileLink").href = submission.file;
     document.getElementById("grade").value = submission.grade ?? "";
     document.getElementById("feedback").value = submission.feedback ?? "";
+
+    updateGradeLetterPreview();
 
     gradeModal.show();
 
@@ -229,7 +314,7 @@ async function saveGrade() {
 
     try {
 
-        await axios.patch(`${SUBMISSIONS_ENDPOINT}${editingSubmissionId}/`, payload, {
+        await api.patch(`${SUBMISSIONS_ENDPOINT}${editingSubmissionId}/`, payload, {
             headers: API.headers()
         });
 
@@ -303,8 +388,11 @@ function validateGradeForm() {
 
     const grade = document.getElementById("grade").value;
 
-    if (grade === "" || Number(grade) < 0) {
-        showFieldError("grade", "Enter a valid grade.");
+    if (grade === "") {
+        showFieldError("grade", "Enter marks.");
+        valid = false;
+    } else if (Number(grade) < 0 || Number(grade) > 100) {
+        showFieldError("grade", "Marks must be between 0 and 100.");
         valid = false;
     }
 

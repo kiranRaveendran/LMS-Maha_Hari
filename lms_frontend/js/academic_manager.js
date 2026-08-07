@@ -163,7 +163,7 @@ async function editManager(id){
 
     try{
 
-        const response = await axios.get(
+        const response = await api.get(
 
             `${API.BASE_URL}/api/accounts/academic-managers/${id}/`,
 
@@ -230,7 +230,7 @@ async function loadManagers(){
     try{
 
 
-        const response = await axios.get(
+        const response = await api.get(
 
             `${API.BASE_URL}/api/accounts/academic-managers/`,
 
@@ -597,7 +597,7 @@ Saving...
 
         if(editingManagerId){
 
-            response = await axios.patch(
+            response = await api.patch(
 
                 `${API.BASE_URL}/api/accounts/academic-managers/${editingManagerId}/`,
 
@@ -619,7 +619,7 @@ Saving...
 
         else{
 
-            response = await axios.post(
+            response = await api.post(
 
                 `${API.BASE_URL}/api/accounts/academic-managers/`,
 
@@ -721,7 +721,7 @@ async function deleteManager(){
 
     try{
 
-        await axios.delete(
+        await api.delete(
 
             `${API.BASE_URL}/api/accounts/academic-managers/${deleteManagerId}/`,
 
