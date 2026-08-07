@@ -12,3 +12,5 @@
 # Ignore the virtual environment folder
 venv/
 .env*
+
+media/
