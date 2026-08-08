@@ -11,6 +11,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 
@@ -34,6 +35,7 @@ from .admin_serializers import (
     AdminBatchPerformanceSerializer,
     AdminBatchCourseSummarySerializer,
 )
+from .pagination import StandardResultsPagination
 
 User = get_user_model()
 
@@ -161,6 +163,11 @@ class StudentView(APIView):
 class AcademicManagerListCreateView(generics.ListCreateAPIView):
     serializer_class = AcademicManagerSerializer
     permission_classes = [IsSuperUser]
+    pagination_class = StandardResultsPagination
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = ["username", "email", "phone"]
+    ordering_fields = ["username", "email", "date_joined"]
+    ordering = ["-date_joined"]
 
     def get_queryset(self):
         return CustomUser.objects.filter(role=CustomUser.Role.ACADEMIC_MANAGER)
@@ -177,6 +184,11 @@ class AcademicManagerDetailView(generics.RetrieveUpdateDestroyAPIView):
 class FacultyListCreateView(generics.ListCreateAPIView):
     serializer_class = FacultySerializer
     permission_classes = [IsSuperUser]
+    pagination_class = StandardResultsPagination
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = ["username", "email", "phone"]
+    ordering_fields = ["username", "email", "date_joined"]
+    ordering = ["-date_joined"]
 
     def get_queryset(self):
         return CustomUser.objects.filter(role=CustomUser.Role.FACULTY)
@@ -193,6 +205,11 @@ class FacultyDetailView(generics.RetrieveUpdateDestroyAPIView):
 class StudentListCreateView(generics.ListCreateAPIView):
     serializer_class = StudentSerializer
     permission_classes = [IsSuperUser]
+    pagination_class = StandardResultsPagination
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = ["username", "email", "phone"]
+    ordering_fields = ["username", "email", "date_joined"]
+    ordering = ["-date_joined"]
 
     def get_queryset(self):
         return CustomUser.objects.filter(role=CustomUser.Role.STUDENT)
@@ -245,11 +262,16 @@ class AdminCourseListView(generics.ListAPIView):
     """
     Read-only course oversight for Admin — no create/edit/delete,
     that's Academic Manager's job (Developer 2's module).
-    GET /api/accounts/admin/courses/
+    GET /api/accounts/admin/courses/?page=<n>&limit=<n>&search=<text>
     """
     permission_classes = [IsAuthenticated, IsSuperUser]
     serializer_class = AdminCourseSerializer
-    queryset = Course.objects.select_related("faculty", "batch").all().order_by("code")
+    pagination_class = StandardResultsPagination
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = ["name", "code", "faculty__username"]
+    ordering_fields = ["name", "code"]
+    ordering = ["code"]
+    queryset = Course.objects.select_related("faculty", "batch").all()
 
 
 # ===============================================================
@@ -262,12 +284,13 @@ class AdminLeaveRequestViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin,
     specifically — not Faculty or Student requests, those are reviewed
     by Academic Manager and Faculty respectively, one level down.
 
-    GET   /api/accounts/admin/leave-requests/            (optionally ?status=PENDING)
+    GET   /api/accounts/admin/leave-requests/            (optionally ?status=PENDING&page=<n>&limit=<n>)
     GET   /api/accounts/admin/leave-requests/{id}/
     PATCH /api/accounts/admin/leave-requests/{id}/        (status only)
     """
     permission_classes = [IsAuthenticated, IsSuperUser]
     http_method_names = ["get", "patch", "head", "options"]
+    pagination_class = StandardResultsPagination
 
     def get_queryset(self):
         queryset = (
