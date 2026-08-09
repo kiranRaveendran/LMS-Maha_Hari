@@ -6,7 +6,12 @@ const ADMIN_COURSES_ENDPOINT = `${API.BASE_URL}/api/accounts/admin/courses/`;
 
 let tableBody;
 let courseCount;
-let allCourses = [];
+
+let currentPage = 1;
+const PAGE_SIZE = 10;
+let totalCount = 0;
+let searchQuery = "";
+let searchDebounceTimer = null;
 
 function initialize() {
 
@@ -20,22 +25,35 @@ function initialize() {
     tableBody = document.getElementById("courseTableBody");
     courseCount = document.getElementById("courseCount");
 
-    document.getElementById("searchInput").addEventListener("keyup", searchCourses);
+    document.getElementById("searchInput").addEventListener("keyup", () => {
+        clearTimeout(searchDebounceTimer);
+        searchDebounceTimer = setTimeout(() => {
+            searchQuery = document.getElementById("searchInput").value.trim();
+            loadCourses(1);
+        }, 350);
+    });
 
-    loadCourses();
+    loadCourses(1);
 
 }
 
-async function loadCourses() {
+async function loadCourses(page = 1) {
+
+    currentPage = page;
 
     try {
 
-        const response = await api.get(ADMIN_COURSES_ENDPOINT, {
-            headers: API.headers()
-        });
+        const params = { page: currentPage, limit: PAGE_SIZE };
+        if (searchQuery) {
+            params.search = searchQuery;
+        }
 
-        allCourses = response.data;
-        renderTable(allCourses);
+        const response = await api.get(ADMIN_COURSES_ENDPOINT, { params });
+
+        totalCount = response.data.count;
+        renderTable(response.data.results);
+        renderShowingText(response.data.results.length);
+        renderPagination();
 
     } catch (error) {
 
@@ -58,7 +76,7 @@ async function loadCourses() {
 
 function renderTable(courses) {
 
-    courseCount.textContent = courses.length;
+    courseCount.textContent = totalCount;
 
     if (courses.length === 0) {
         tableBody.innerHTML = `
@@ -66,16 +84,20 @@ function renderTable(courses) {
             <i class="bi bi-book fs-1"></i><br><br>
             No Courses Found
         </td></tr>`;
+        document.getElementById("showingRangeText").textContent = "Showing 0 of 0";
+        document.getElementById("coursesPagination").innerHTML = "";
         return;
     }
 
     tableBody.innerHTML = "";
 
-    courses.forEach((course, index) => {
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
+
+    courses.forEach((course, i) => {
 
         tableBody.innerHTML += `
         <tr>
-            <td>${index + 1}</td>
+            <td>${startIndex + i + 1}</td>
             <td><strong>${course.code}</strong></td>
             <td>${course.name}</td>
             <td>${course.faculty_username || `<span class="text-muted">Unassigned</span>`}</td>
@@ -88,16 +110,34 @@ function renderTable(courses) {
 
 }
 
-function searchCourses() {
+function renderShowingText(resultsOnPage) {
 
-    const keyword = document.getElementById("searchInput").value.toLowerCase();
+    const el = document.getElementById("showingRangeText");
+    if (!el) return;
 
-    const filtered = allCourses.filter(course =>
-        course.name.toLowerCase().includes(keyword) ||
-        course.code.toLowerCase().includes(keyword) ||
-        (course.faculty_username || "").toLowerCase().includes(keyword)
+    if (totalCount === 0) {
+        el.textContent = "Showing 0 of 0";
+        return;
+    }
+
+    const start = (currentPage - 1) * PAGE_SIZE + 1;
+    const end = start + resultsOnPage - 1;
+
+    el.textContent = `Showing ${start}–${end} of ${totalCount}`;
+
+}
+
+function renderPagination() {
+
+    const container = document.getElementById("coursesPagination");
+    if (!container) return;
+
+    renderPaginationControls(
+        container,
+        totalCount,
+        currentPage,
+        PAGE_SIZE,
+        (page) => loadCourses(page)
     );
-
-    renderTable(filtered);
 
 }

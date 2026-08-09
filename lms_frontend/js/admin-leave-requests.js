@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 const ADMIN_LEAVE_ENDPOINT = `${API.BASE_URL}/api/accounts/admin/leave-requests/`;
-const PER_PAGE = 8;
+const PAGE_SIZE = 10;
 
 const STATUS_BADGES = {
     PENDING: `<span class="badge bg-warning text-dark">Pending</span>`,
@@ -13,8 +13,9 @@ const STATUS_BADGES = {
 
 let tableBody;
 let statusFilter;
-let allRecords = [];
+
 let currentPage = 1;
+let totalCount = 0;
 
 function initialize() {
 
@@ -28,13 +29,16 @@ function initialize() {
     tableBody = document.getElementById("leaveTableBody");
     statusFilter = document.getElementById("statusFilter");
 
-    statusFilter.addEventListener("change", loadRequests);
+    // Filter changes always reset back to page 1
+    statusFilter.addEventListener("change", () => loadRequests(1));
 
-    loadRequests();
+    loadRequests(1);
 
 }
 
-async function loadRequests() {
+async function loadRequests(page = 1) {
+
+    currentPage = page;
 
     tableBody.innerHTML = `
     <tr><td colspan="7" class="text-center py-5">
@@ -43,16 +47,17 @@ async function loadRequests() {
 
     try {
 
-        const status = statusFilter.value;
-        const url = status ? `${ADMIN_LEAVE_ENDPOINT}?status=${status}` : ADMIN_LEAVE_ENDPOINT;
+        const params = { page: currentPage, limit: PAGE_SIZE };
+        if (statusFilter.value) {
+            params.status = statusFilter.value;
+        }
 
-        const response = await api.get(url, {
-            headers: API.headers()
-        });
+        const response = await api.get(ADMIN_LEAVE_ENDPOINT, { params });
 
-        allRecords = response.data;
-        currentPage = 1;
-        renderPage();
+        totalCount = response.data.count;
+        renderTable(response.data.results);
+        renderShowingText(response.data.results.length);
+        renderPagination();
 
     } catch (error) {
 
@@ -73,25 +78,25 @@ async function loadRequests() {
 
 }
 
-function renderPage() {
+function renderTable(records) {
 
-    if (!allRecords || allRecords.length === 0) {
+    if (!records || records.length === 0) {
         tableBody.innerHTML = `
         <tr><td colspan="7" class="text-center py-5 text-muted">
             <i class="bi bi-inbox fs-1"></i><br><br>
             No leave requests found.
         </td></tr>`;
+        document.getElementById("showingRangeText").textContent = "Showing 0 of 0";
         document.getElementById("leavePagination").innerHTML = "";
         return;
     }
 
-    const pageItems = paginateArray(allRecords, currentPage, PER_PAGE);
-
     tableBody.innerHTML = "";
 
-    pageItems.forEach((record) => {
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
 
-        const globalIndex = allRecords.indexOf(record);
+    records.forEach((record, i) => {
+
         const statusBadge = STATUS_BADGES[record.status] || record.status;
 
         const actions = record.status === "PENDING"
@@ -107,7 +112,7 @@ function renderPage() {
 
         tableBody.innerHTML += `
         <tr>
-            <td>${globalIndex + 1}</td>
+            <td>${startIndex + i + 1}</td>
             <td><strong>${record.applicant_username}</strong></td>
             <td>${record.reason}</td>
             <td>${record.start_date}</td>
@@ -127,12 +132,36 @@ function renderPage() {
         button.addEventListener("click", () => reviewRequest(button.dataset.id, "REJECTED"));
     });
 
+}
+
+function renderShowingText(resultsOnPage) {
+
+    const el = document.getElementById("showingRangeText");
+    if (!el) return;
+
+    if (totalCount === 0) {
+        el.textContent = "Showing 0 of 0";
+        return;
+    }
+
+    const start = (currentPage - 1) * PAGE_SIZE + 1;
+    const end = start + resultsOnPage - 1;
+
+    el.textContent = `Showing ${start}–${end} of ${totalCount}`;
+
+}
+
+function renderPagination() {
+
+    const container = document.getElementById("leavePagination");
+    if (!container) return;
+
     renderPaginationControls(
-        document.getElementById("leavePagination"),
-        allRecords.length,
+        container,
+        totalCount,
         currentPage,
-        PER_PAGE,
-        (page) => { currentPage = page; renderPage(); }
+        PAGE_SIZE,
+        (page) => loadRequests(page)
     );
 
 }
@@ -141,12 +170,10 @@ async function reviewRequest(id, status) {
 
     try {
 
-        await api.patch(`${ADMIN_LEAVE_ENDPOINT}${id}/`, { status }, {
-            headers: API.headers()
-        });
+        await api.patch(`${ADMIN_LEAVE_ENDPOINT}${id}/`, { status });
 
         showSuccessMessage(`Request ${status === "APPROVED" ? "approved" : "rejected"}.`);
-        loadRequests();
+        loadRequests(currentPage);
 
     } catch (error) {
 

@@ -37,11 +37,16 @@ async function loadDropdownData() {
 
     try {
 
+        // limit=100 here on purpose — this endpoint is now paginated
+        // (10 per page by default on the Courses list page), but a
+        // dropdown needs the *complete* list, not one page of it.
+        // 100 covers this project's realistic scale; if course count
+        // ever exceeds that, this would need real "load all pages" logic.
         const response = await api.get(ADMIN_COURSES_ENDPOINT, {
-            headers: API.headers()
+            params: { limit: 100 }
         });
 
-        const courses = response.data;
+        const courses = response.data.results;
 
         courseSelect.innerHTML = `<option value="">Select a course...</option>` +
             courses.map(c => `<option value="${c.id}">${c.name} (${c.code})</option>`).join("");
