@@ -12,6 +12,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 
@@ -121,9 +122,32 @@ def student_management(request):
 # ===============================================================
 
 class ProfileView(APIView):
+    """
+    GET    /api/accounts/profile/   — current user's profile
+    PATCH  /api/accounts/profile/   — update profile_image (multipart)
+    DELETE /api/accounts/profile/   — remove profile_image
+    """
     permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
 
     def get(self, request):
+        serializer = UserSerializer(request.user)
+        return Response(serializer.data)
+
+    def patch(self, request):
+        serializer = UserSerializer(request.user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request):
+        # Remove the actual file from storage, not just clear the DB field,
+        # so orphaned image files don't pile up on disk.
+        if request.user.profile_image:
+            request.user.profile_image.delete(save=False)
+        request.user.profile_image = None
+        request.user.save()
         serializer = UserSerializer(request.user)
         return Response(serializer.data)
 
