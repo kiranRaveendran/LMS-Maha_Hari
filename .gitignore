@@ -1,3 +1,4 @@
 .vscode*
 Read Me.txt*
 lms_backend/media/
+lms_backend/db.sqlite3
