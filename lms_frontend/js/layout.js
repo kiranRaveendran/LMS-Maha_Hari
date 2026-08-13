@@ -177,7 +177,7 @@ function renderLayout({ pageTitle, active }) {
 // — while the shell HTML (inserted synchronously by renderLayout())
 // is already in the DOM well before that point.
 // ===============================================================
-let currentProfileImageUrl = "";
+
 document.addEventListener("DOMContentLoaded", initProfileWidget);
 
 async function initProfileWidget() {
@@ -188,24 +188,11 @@ async function initProfileWidget() {
 
     const profileModal = new bootstrap.Modal(profileModalEl);
 
-   trigger.addEventListener("click", () => {
-    document.getElementById("profilePictureInput").value = "";
-    document.getElementById("profilePictureError").textContent = "";
-
-    const preview = document.getElementById("profileModalPreview");
-    const icon = document.getElementById("profileModalIcon");
-
-    if (currentProfileImageUrl) {
-        preview.src = currentProfileImageUrl;
-        preview.style.display = "inline-block";
-        icon.style.display = "none";
-    } else {
-        preview.style.display = "none";
-        icon.style.display = "inline-block";
-    }
-
-    profileModal.show();
-});
+    trigger.addEventListener("click", () => {
+        document.getElementById("profilePictureInput").value = "";
+        document.getElementById("profilePictureError").textContent = "";
+        profileModal.show();
+    });
 
     document.getElementById("profilePictureInput").addEventListener("change", (e) => {
         const file = e.target.files[0];
@@ -245,33 +232,20 @@ function renderProfile(profile) {
     nameEl.textContent = displayName;
 
     if (profile.profile_image) {
-
-    const imageUrl = `${API.BASE_URL}${profile.profile_image}`;
-
-    currentProfileImageUrl = imageUrl;
-
-    imgEl.src = imageUrl;
-    imgEl.style.display = "inline-block";
-    iconEl.style.display = "none";
-
-    modalPreview.src = imageUrl;
-    modalPreview.style.display = "inline-block";
-    modalIcon.style.display = "none";
-
-    removeBtn.style.display = "inline-block";
-
-} else {
-
-    currentProfileImageUrl = "";
-
-    imgEl.style.display = "none";
-    iconEl.style.display = "inline-block";
-
-    modalPreview.style.display = "none";
-    modalIcon.style.display = "inline-block";
-
-    removeBtn.style.display = "none";
-}
+        imgEl.src = `${API.BASE_URL}${profile.profile_image}`;
+        imgEl.style.display = "inline-block";
+        iconEl.style.display = "none";
+        modalPreview.src = `${API.BASE_URL}${profile.profile_image}`;
+        modalPreview.style.display = "inline-block";
+        modalIcon.style.display = "none";
+        removeBtn.style.display = "inline-block";
+    } else {
+        imgEl.style.display = "none";
+        iconEl.style.display = "inline-block";
+        modalPreview.style.display = "none";
+        modalIcon.style.display = "inline-block";
+        removeBtn.style.display = "none";
+    }
 
 }
 

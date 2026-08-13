@@ -13,12 +13,12 @@
 // folder deep inside faculty/. This is the fix for the whole class
 // of "Cannot GET" / 404 path bugs we kept hitting with the Admin module.
 const FACULTY_NAV_ITEMS = [
-  { label: "Dashboard", icon: "bi-speedometer2", href: "/faculty_dashboard.html", key: "dashboard" },
-  { label: "Learning Materials", icon: "bi-journal-richtext", href: "/faculty/learning-materials.html", key: "learning-materials" },
-  { label: "Assignments", icon: "bi-clipboard-check", href: "/faculty/assignments.html", key: "assignments" },
-  { label: "Attendance", icon: "bi-calendar2-check", href: "/faculty/attendance.html", key: "attendance" },
-  { label: "Marks", icon: "bi-bar-chart-line", href: "/faculty/marks.html", key: "marks" },
-  { label: "Leave Management", icon: "bi-calendar-check", href: "/faculty/leave-history.html", key: "leave-history" },
+  { label: "Dashboard",          icon: "bi-speedometer2",     href: "/faculty_dashboard.html",              key: "dashboard" },
+  { label: "Learning Materials", icon: "bi-journal-richtext", href: "/faculty/learning-materials.html",     key: "learning-materials" },
+  { label: "Assignments",        icon: "bi-clipboard-check",  href: "/faculty/assignments.html",            key: "assignments" },
+  { label: "Attendance",         icon: "bi-calendar2-check",  href: "/faculty/attendance.html",             key: "attendance" },
+  { label: "Marks",              icon: "bi-bar-chart-line",   href: "/faculty/marks.html",                  key: "marks" },
+  { label: "Leave Management",   icon: "bi-calendar-check",   href: "/faculty/leave-history.html",          key: "leave-history" },
   { label: "Student Leave Requests", icon: "bi-person-check", href: "/faculty/student-leave-requests.html", key: "student-leave-requests" },
 ];
 
@@ -172,135 +172,130 @@ document.addEventListener("DOMContentLoaded", initProfileWidget);
 
 async function initProfileWidget() {
 
-  const trigger = document.getElementById("profileAvatarTrigger");
-  const profileModalEl = document.getElementById("profileModal");
-  if (!trigger || !profileModalEl || typeof api === "undefined") return;
+    const trigger = document.getElementById("profileAvatarTrigger");
+    const profileModalEl = document.getElementById("profileModal");
+    if (!trigger || !profileModalEl || typeof api === "undefined") return;
 
-  const profileModal = new bootstrap.Modal(profileModalEl);
+    const profileModal = new bootstrap.Modal(profileModalEl);
 
-  trigger.addEventListener("click", () => {
-    document.getElementById("profilePictureInput").value = "";
-    document.getElementById("profilePictureError").textContent = "";
-    profileModal.show();
-  });
+    trigger.addEventListener("click", () => {
+        document.getElementById("profilePictureInput").value = "";
+        document.getElementById("profilePictureError").textContent = "";
+        profileModal.show();
+    });
 
-  document.getElementById("profilePictureInput").addEventListener("change", (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const preview = document.getElementById("profileModalPreview");
-      preview.src = ev.target.result;
-      preview.style.display = "inline-block";
-      document.getElementById("profileModalIcon").style.display = "none";
-    };
-    reader.readAsDataURL(file);
-  });
+    document.getElementById("profilePictureInput").addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            const preview = document.getElementById("profileModalPreview");
+            preview.src = ev.target.result;
+            preview.style.display = "inline-block";
+            document.getElementById("profileModalIcon").style.display = "none";
+        };
+        reader.readAsDataURL(file);
+    });
 
-  document.getElementById("saveProfilePictureBtn").addEventListener("click", saveProfilePicture);
-  document.getElementById("removeProfilePictureBtn").addEventListener("click", removeProfilePicture);
+    document.getElementById("saveProfilePictureBtn").addEventListener("click", saveProfilePicture);
+    document.getElementById("removeProfilePictureBtn").addEventListener("click", removeProfilePicture);
 
-  try {
-    const response = await api.get(`${API.BASE_URL}/api/accounts/profile/`);
-    renderProfile(response.data);
-  } catch (error) {
-    console.error(error);
-  }
+    try {
+        const response = await api.get(`${API.BASE_URL}/api/accounts/profile/`);
+        renderTopbarProfile(response.data);
+    } catch (error) {
+        console.error(error);
+    }
 
 }
 
-function renderProfile(profile) {
+function renderTopbarProfile(profile) {
 
-  const nameEl = document.getElementById("topbarUserName");
-  const imgEl = document.getElementById("topbarAvatarImg");
-  const iconEl = document.getElementById("topbarAvatarIcon");
-  const modalPreview = document.getElementById("profileModalPreview");
-  const modalIcon = document.getElementById("profileModalIcon");
-  const removeBtn = document.getElementById("removeProfilePictureBtn");
+    const nameEl = document.getElementById("topbarUserName");
+    const imgEl = document.getElementById("topbarAvatarImg");
+    const iconEl = document.getElementById("topbarAvatarIcon");
+    const modalPreview = document.getElementById("profileModalPreview");
+    const modalIcon = document.getElementById("profileModalIcon");
+    const removeBtn = document.getElementById("removeProfilePictureBtn");
 
-  const displayName = [profile.first_name, profile.last_name].filter(Boolean).join(" ") || profile.username;
-  nameEl.textContent = displayName;
+    const displayName = [profile.first_name, profile.last_name].filter(Boolean).join(" ") || profile.username;
+    nameEl.textContent = displayName;
 
-  if (profile.profile_image) {
-
-    const imageUrl = `${API.BASE_URL}${profile.profile_image}`;
-
-    imgEl.src = imageUrl;
-    imgEl.style.display = "inline-block";
-    iconEl.style.display = "none";
-
-    modalPreview.src = imageUrl;
-    modalPreview.style.display = "inline-block";
-    modalIcon.style.display = "none";
-
-    removeBtn.style.display = "inline-block";
-  } else {
-    imgEl.style.display = "none";
-    iconEl.style.display = "inline-block";
-    modalPreview.style.display = "none";
-    modalIcon.style.display = "inline-block";
-    removeBtn.style.display = "none";
-  }
+    if (profile.profile_image) {
+        imgEl.src = `${API.BASE_URL}${profile.profile_image}`;
+        imgEl.style.display = "inline-block";
+        iconEl.style.display = "none";
+        modalPreview.src = `${API.BASE_URL}${profile.profile_image}`;
+        modalPreview.style.display = "inline-block";
+        modalIcon.style.display = "none";
+        removeBtn.style.display = "inline-block";
+    } else {
+        imgEl.style.display = "none";
+        iconEl.style.display = "inline-block";
+        modalPreview.style.display = "none";
+        modalIcon.style.display = "inline-block";
+        removeBtn.style.display = "none";
+    }
 
 }
 
 async function saveProfilePicture() {
 
-  const fileInput = document.getElementById("profilePictureInput");
-  const file = fileInput.files[0];
+    const fileInput = document.getElementById("profilePictureInput");
+    const file = fileInput.files[0];
 
-  if (!file) {
-    document.getElementById("profilePictureError").textContent = "Choose an image first.";
-    return;
-  }
+    if (!file) {
+        document.getElementById("profilePictureError").textContent = "Choose an image first.";
+        return;
+    }
 
-  const saveBtn = document.getElementById("saveProfilePictureBtn");
-  saveBtn.disabled = true;
-  saveBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Saving...`;
+    const saveBtn = document.getElementById("saveProfilePictureBtn");
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Saving...`;
 
-  const formData = new FormData();
-  formData.append("profile_image", file);
+    const formData = new FormData();
+    formData.append("profile_image", file);
 
-  try {
+    try {
 
-    const response = await api.patch(`${API.BASE_URL}/api/accounts/profile/`, formData);
-    renderProfile(response.data);
-    bootstrap.Modal.getInstance(document.getElementById("profileModal"))?.hide();
+        const response = await api.patch(`${API.BASE_URL}/api/accounts/profile/`, formData);
+        renderTopbarProfile(response.data);
+        bootstrap.Modal.getInstance(document.getElementById("profileModal"))?.hide();
 
-  } catch (error) {
+    } catch (error) {
 
-    console.error(error);
-    document.getElementById("profilePictureError").textContent = "Failed to save picture.";
+        console.error(error);
+        document.getElementById("profilePictureError").textContent = "Failed to save picture.";
 
-  } finally {
+    } finally {
 
-    saveBtn.disabled = false;
-    saveBtn.innerHTML = `<i class="bi bi-check-circle me-2"></i>Save`;
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = `<i class="bi bi-check-circle me-2"></i>Save`;
 
-  }
+    }
 
 }
 
 async function removeProfilePicture() {
 
-  const removeBtn = document.getElementById("removeProfilePictureBtn");
-  removeBtn.disabled = true;
+    const removeBtn = document.getElementById("removeProfilePictureBtn");
+    removeBtn.disabled = true;
 
-  try {
+    try {
 
-    const response = await api.delete(`${API.BASE_URL}/api/accounts/profile/`);
-    renderProfile(response.data);
-    bootstrap.Modal.getInstance(document.getElementById("profileModal"))?.hide();
+        const response = await api.delete(`${API.BASE_URL}/api/accounts/profile/`);
+        renderTopbarProfile(response.data);
+        bootstrap.Modal.getInstance(document.getElementById("profileModal"))?.hide();
 
-  } catch (error) {
+    } catch (error) {
 
-    console.error(error);
-    document.getElementById("profilePictureError").textContent = "Failed to remove picture.";
+        console.error(error);
+        document.getElementById("profilePictureError").textContent = "Failed to remove picture.";
 
-  } finally {
+    } finally {
 
-    removeBtn.disabled = false;
+        removeBtn.disabled = false;
 
-  }
+    }
 
 }

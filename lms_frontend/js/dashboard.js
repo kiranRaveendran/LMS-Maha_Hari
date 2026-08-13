@@ -20,6 +20,7 @@ const STAT_CONFIG = [
 document.addEventListener("DOMContentLoaded", () => {
     loadDashboardStats();
     loadPerformanceOverview();
+    initProfileWidget();
 
     document
         .getElementById("refreshDashboardBtn")
@@ -199,6 +200,145 @@ function handleDashboardError(error) {
         showToast(message, "danger");
     } else {
         alert(message);
+    }
+
+}
+
+// ===============================================================
+// Profile picture widget — same functionality as every other Admin
+// page (via layout.js), added directly here since admin_dashboard.html
+// is a standalone page that doesn't use the shared renderLayout()
+// shell. Named renderTopbarProfile (not renderProfile) to avoid any
+// future collision with page-specific code, matching the same
+// collision issue that was found and fixed on the Faculty Dashboard.
+// ===============================================================
+
+async function initProfileWidget() {
+
+    const trigger = document.getElementById("profileAvatarTrigger");
+    const profileModalEl = document.getElementById("profileModal");
+    if (!trigger || !profileModalEl) return;
+
+    const profileModal = new bootstrap.Modal(profileModalEl);
+
+    trigger.addEventListener("click", () => {
+        document.getElementById("profilePictureInput").value = "";
+        document.getElementById("profilePictureError").textContent = "";
+        profileModal.show();
+    });
+
+    document.getElementById("profilePictureInput").addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            const preview = document.getElementById("profileModalPreview");
+            preview.src = ev.target.result;
+            preview.style.display = "inline-block";
+            document.getElementById("profileModalIcon").style.display = "none";
+        };
+        reader.readAsDataURL(file);
+    });
+
+    document.getElementById("saveProfilePictureBtn").addEventListener("click", saveProfilePicture);
+    document.getElementById("removeProfilePictureBtn").addEventListener("click", removeProfilePicture);
+
+    try {
+        const response = await api.get(`${API.BASE_URL}/api/accounts/profile/`);
+        renderTopbarProfile(response.data);
+    } catch (error) {
+        console.error(error);
+    }
+
+}
+
+function renderTopbarProfile(profile) {
+
+    const nameEl = document.getElementById("topbarUserName");
+    const imgEl = document.getElementById("topbarAvatarImg");
+    const iconEl = document.getElementById("topbarAvatarIcon");
+    const modalPreview = document.getElementById("profileModalPreview");
+    const modalIcon = document.getElementById("profileModalIcon");
+    const removeBtn = document.getElementById("removeProfilePictureBtn");
+
+    const displayName = [profile.first_name, profile.last_name].filter(Boolean).join(" ") || profile.username;
+    nameEl.textContent = displayName;
+
+    if (profile.profile_image) {
+        imgEl.src = `${API.BASE_URL}${profile.profile_image}`;
+        imgEl.style.display = "inline-block";
+        iconEl.style.display = "none";
+        modalPreview.src = `${API.BASE_URL}${profile.profile_image}`;
+        modalPreview.style.display = "inline-block";
+        modalIcon.style.display = "none";
+        removeBtn.style.display = "inline-block";
+    } else {
+        imgEl.style.display = "none";
+        iconEl.style.display = "inline-block";
+        modalPreview.style.display = "none";
+        modalIcon.style.display = "inline-block";
+        removeBtn.style.display = "none";
+    }
+
+}
+
+async function saveProfilePicture() {
+
+    const fileInput = document.getElementById("profilePictureInput");
+    const file = fileInput.files[0];
+
+    if (!file) {
+        document.getElementById("profilePictureError").textContent = "Choose an image first.";
+        return;
+    }
+
+    const saveBtn = document.getElementById("saveProfilePictureBtn");
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Saving...`;
+
+    const formData = new FormData();
+    formData.append("profile_image", file);
+
+    try {
+
+        const response = await api.patch(`${API.BASE_URL}/api/accounts/profile/`, formData);
+        renderTopbarProfile(response.data);
+        bootstrap.Modal.getInstance(document.getElementById("profileModal"))?.hide();
+
+    } catch (error) {
+
+        console.error(error);
+        document.getElementById("profilePictureError").textContent = "Failed to save picture.";
+
+    } finally {
+
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = `<i class="bi bi-check-circle me-2"></i>Save`;
+
+    }
+
+}
+
+async function removeProfilePicture() {
+
+    const removeBtn = document.getElementById("removeProfilePictureBtn");
+    removeBtn.disabled = true;
+
+    try {
+
+        const response = await api.delete(`${API.BASE_URL}/api/accounts/profile/`);
+        renderTopbarProfile(response.data);
+        bootstrap.Modal.getInstance(document.getElementById("profileModal"))?.hide();
+
+    } catch (error) {
+
+        console.error(error);
+        document.getElementById("profilePictureError").textContent = "Failed to remove picture.";
+
+    } finally {
+
+        removeBtn.disabled = false;
+
     }
 
 }
