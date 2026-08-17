@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'faculty',
     'leave_management',
     'feedback',
+    'student',
     "corsheaders",
 ]
 

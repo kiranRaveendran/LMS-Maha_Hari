@@ -27,6 +27,7 @@ urlpatterns = [
         include("accounts.urls"),
     ),
     path("api/faculty/", include("faculty.urls")),
+    path("api/student/", include("student.urls")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:
