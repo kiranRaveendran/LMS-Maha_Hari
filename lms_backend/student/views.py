@@ -11,12 +11,16 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from academics.models import StudentCourse
 from accounts.permissions import IsStudent
 from faculty.models import Assignment, Submission, Attendance, ExamMark, LearningMaterial
+from leave_management.models import LeaveRequest
 
 from .serializers import (
     StudentDashboardSerializer,
     StudentLearningMaterialSerializer,
     StudentAssignmentSerializer,
     StudentSubmissionSerializer,
+    StudentExamMarkSerializer,
+    StudentAttendanceSerializer,
+    StudentLeaveRequestSerializer,
 )
 
 
@@ -203,3 +207,124 @@ class StudentSubmissionViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet)
 
         serializer = StudentSubmissionSerializer(submission, context={"request": request})
         return Response(serializer.data, status=201)
+
+
+# ===============================================================
+# Stage 4 — Exam Marks (read-only)
+# ===============================================================
+
+class StudentExamMarkViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    """
+    Read-only — exam results (INTERNAL / MODEL / FINAL) entered by
+    faculty via faculty.ExamMarkViewSet. Same model, own records only,
+    scoped to courses the student is actually enrolled in.
+
+    GET /api/student/exam-marks/                 (optionally ?course=<id>&exam_type=<type>)
+    GET /api/student/exam-marks/{id}/
+    """
+    serializer_class = StudentExamMarkSerializer
+    permission_classes = [IsAuthenticated, IsStudent]
+
+    def get_queryset(self):
+        enrolled_course_ids = StudentCourse.objects.filter(
+            student=self.request.user
+        ).values_list("course_id", flat=True)
+
+        queryset = (
+            ExamMark.objects
+            .filter(student=self.request.user, course_id__in=enrolled_course_ids)
+            .select_related("course")
+            .order_by("course__name", "exam_type")
+        )
+
+        course_id = self.request.query_params.get("course")
+        exam_type = self.request.query_params.get("exam_type")
+
+        if course_id:
+            queryset = queryset.filter(course_id=course_id)
+        if exam_type:
+            queryset = queryset.filter(exam_type=exam_type)
+
+        return queryset
+
+
+# ===============================================================
+# Stage 5 — Attendance (read-only)
+# ===============================================================
+
+class StudentAttendanceViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    """
+    Read-only — a student's own attendance records, marked by faculty
+    via faculty.AttendanceViewSet (roster/bulk-mark). No write actions
+    here at all; a student can view the calendar but never edit it.
+
+    GET /api/student/attendance/                 (optionally ?course=<id>)
+    GET /api/student/attendance/{id}/
+    """
+    serializer_class = StudentAttendanceSerializer
+    permission_classes = [IsAuthenticated, IsStudent]
+
+    def get_queryset(self):
+        enrolled_course_ids = StudentCourse.objects.filter(
+            student=self.request.user
+        ).values_list("course_id", flat=True)
+
+        queryset = (
+            Attendance.objects
+            .filter(student=self.request.user, course_id__in=enrolled_course_ids)
+            .select_related("course")
+            .order_by("-date")
+        )
+
+        course_id = self.request.query_params.get("course")
+        if course_id:
+            queryset = queryset.filter(course_id=course_id)
+
+        return queryset
+
+
+# ===============================================================
+# Stage 6 — Leave Requests (submit + view own history + withdraw)
+# ===============================================================
+
+class StudentLeaveHistoryViewSet(
+    mixins.ListModelMixin, mixins.RetrieveModelMixin,
+    mixins.CreateModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet
+):
+    """
+    Mirrors faculty.FacultyLeaveHistoryViewSet exactly: students view
+    their own leave history, submit new requests, and can withdraw
+    (delete) a request only while it's still PENDING — once faculty
+    reviews it (via faculty.StudentLeaveRequestViewSet), it becomes a
+    permanent record and can't be deleted.
+
+    GET    /api/student/leave-history/
+    GET    /api/student/leave-history/{id}/
+    POST   /api/student/leave-history/
+    DELETE /api/student/leave-history/{id}/   (PENDING only)
+    """
+    serializer_class = StudentLeaveRequestSerializer
+    permission_classes = [IsAuthenticated, IsStudent]
+
+    def get_queryset(self):
+        return (
+            LeaveRequest.objects
+            .filter(applicant=self.request.user)
+            .select_related("reviewed_by")
+            .order_by("-applied_at")
+        )
+
+    def perform_create(self, serializer):
+        # status/reviewed_by are deliberately not client-settable — every
+        # new request starts PENDING with no reviewer, same guarantee as
+        # the Faculty side.
+        serializer.save(applicant=self.request.user, status="PENDING", reviewed_by=None)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance.status != "PENDING":
+            return Response(
+                {"detail": "Only pending requests can be withdrawn. This request has already been reviewed."},
+                status=400
+            )
+        return super().destroy(request, *args, **kwargs)

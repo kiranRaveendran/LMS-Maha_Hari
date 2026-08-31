@@ -2,7 +2,8 @@ from rest_framework import serializers
 
 from academics.models import Course
 from accounts.serializers import UserSerializer
-from faculty.models import LearningMaterial, Assignment, Submission
+from faculty.models import LearningMaterial, Assignment, Submission, ExamMark, Attendance
+from leave_management.models import LeaveRequest
 
 
 # ===============================================================
@@ -86,3 +87,49 @@ class StudentAssignmentSerializer(serializers.ModelSerializer):
             "feedback": sub.feedback,
             "is_late": (sub.submitted_at > obj.due_date) if obj.due_date else None,
         }
+
+
+# ===============================================================
+# Exam Marks (Stage 4, read-only)
+# ===============================================================
+
+class StudentExamMarkSerializer(serializers.ModelSerializer):
+    course_name = serializers.CharField(source="course.name", read_only=True)
+    course_code = serializers.CharField(source="course.code", read_only=True)
+
+    class Meta:
+        model = ExamMark
+        fields = ["id", "course", "course_name", "course_code", "exam_type", "marks"]
+        read_only_fields = fields
+
+
+# ===============================================================
+# Attendance (Stage 5, read-only)
+# ===============================================================
+
+class StudentAttendanceSerializer(serializers.ModelSerializer):
+    course_name = serializers.CharField(source="course.name", read_only=True)
+    course_code = serializers.CharField(source="course.code", read_only=True)
+
+    class Meta:
+        model = Attendance
+        fields = ["id", "course", "course_name", "course_code", "date", "status"]
+        read_only_fields = fields
+
+
+# ===============================================================
+# Leave Requests (Stage 6) — student submits + views own history,
+# faculty reviews via faculty.StudentLeaveRequestViewSet.
+# Mirrors faculty.FacultyLeaveRequestSerializer exactly.
+# ===============================================================
+
+class StudentLeaveRequestSerializer(serializers.ModelSerializer):
+    reviewed_by_username = serializers.CharField(source="reviewed_by.username", read_only=True, default=None)
+
+    class Meta:
+        model = LeaveRequest
+        fields = [
+            "id", "reason", "start_date", "end_date",
+            "status", "applied_at", "reviewed_by_username"
+        ]
+        read_only_fields = ["id", "status", "applied_at"]

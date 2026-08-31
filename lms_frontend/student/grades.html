@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grades | LMS Student</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="/css/admin.css">
+    <link rel="stylesheet" href="/css/responsive.css">
+</head>
+<body>
+
+<template id="page-content-source">
+<div class="container-fluid">
+
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white border-0 py-4">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h3 class="fw-bold mb-1">Grades</h3>
+                    <p class="text-muted mb-0">Your assignment grades, grouped by course.</p>
+                </div>
+                <div class="col-md-6 mt-3 mt-md-0">
+                    <select id="courseFilter" class="form-control">
+                        <option value="">All Courses</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body" id="summaryBody">
+            <div class="text-center py-4 text-muted">
+                <div class="spinner-border text-primary mb-2"></div>
+                <br>Loading Grades...
+            </div>
+        </div>
+    </div>
+
+    <div id="courseSections"></div>
+
+</div>
+
+<style>
+    .summary-stat {
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 16px;
+        text-align: center;
+        height: 100%;
+    }
+    .summary-stat h4 { margin-bottom: 2px; }
+    .grade-table th, .grade-table td { vertical-align: middle; }
+    .feedback-cell {
+        max-width: 220px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        display: inline-block;
+        vertical-align: middle;
+    }
+</style>
+
+</template>
+
+<script src="/js/student-layout.js"></script>
+<script>
+    renderStudentLayout({ pageTitle: "Grades", active: "grades" });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/sidebar.js"></script>
+<script src="/js/student-grades.js"></script>
+
+</body>
+</html>
