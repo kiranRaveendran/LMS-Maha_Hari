@@ -63,9 +63,21 @@ class CustomUser(AbstractUser):
 
     @property
     def batch(self):
+        # There is no direct Batch <-> Student relation in this schema
+        # (Batch.students does not exist). The real path is:
+        # Student -> StudentCourse -> Course -> batch.
+        # A student can technically be enrolled in courses under different
+        # batches (not enforced by the schema), so this returns the batch
+        # of their first enrollment that actually has one set.
         if self.role == self.Role.STUDENT:
-            Batch = apps.get_model("academics", "Batch")
-            return Batch.objects.filter(students=self).first()
+            StudentCourse = apps.get_model("academics", "StudentCourse")
+            enrollment = (
+                StudentCourse.objects
+                .filter(student=self, course__batch__isnull=False)
+                .select_related("course__batch")
+                .first()
+            )
+            return enrollment.course.batch if enrollment else None
         return None
 
     def __str__(self):

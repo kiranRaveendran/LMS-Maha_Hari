@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assignments | LMS Student</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="/css/admin.css">
+    <link rel="stylesheet" href="/css/responsive.css">
+</head>
+<body>
+
+<template id="page-content-source">
+<div class="container-fluid">
+
+    <div class="card shadow-sm border-0">
+
+        <div class="card-header bg-white border-0 py-4">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h3 class="fw-bold mb-1">Assignments</h3>
+                    <p class="text-muted mb-0">Assignments for your enrolled courses — submit your work and track grading.</p>
+                </div>
+                <div class="col-md-6 mt-3 mt-md-0">
+                    <select id="courseFilter" class="form-control">
+                        <option value="">All Courses</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body">
+
+<style>
+    .card-grid-wrapper {
+        max-height: 640px;
+        overflow-y: auto;
+        padding-right: 6px;
+    }
+    .card-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 16px;
+    }
+    .item-card {
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 18px;
+        background: #fff;
+        transition: .2s;
+    }
+    .item-card:hover {
+        box-shadow: var(--shadow);
+        transform: translateY(-2px);
+    }
+    .card-grid-wrapper::-webkit-scrollbar { width: 8px; }
+    .card-grid-wrapper::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 20px; }
+</style>
+
+<div class="card-grid-wrapper">
+    <div class="card-grid" id="assignmentTableBody">
+        <div class="text-center py-5 text-muted" style="grid-column: 1/-1;">
+            <div class="spinner-border text-primary mb-3"></div>
+            <br>
+            Loading Assignments...
+        </div>
+    </div>
+</div>
+
+        </div>
+    </div>
+</div>
+
+<div id="successMessage" class="alert alert-success d-none position-fixed top-0 end-0 m-4 shadow" style="z-index:1055;">
+    <i class="bi bi-check-circle-fill me-2"></i>
+    <span id="successText">Assignment submitted successfully.</span>
+</div>
+
+<!-- Submit Modal -->
+<div class="modal fade" id="submitModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Submit Assignment</h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+
+                <div class="mb-3">
+                    <p class="text-muted mb-1 small">Assignment</p>
+                    <p class="fw-bold mb-0" id="submitAssignmentTitle">—</p>
+                </div>
+
+                <div class="mb-3">
+                    <p class="text-muted mb-1 small">Course</p>
+                    <p class="mb-0" id="submitCourseName">—</p>
+                </div>
+
+                <div class="mb-3">
+                    <p class="text-muted mb-1 small">Due Date</p>
+                    <p class="mb-0" id="submitDueDate">—</p>
+                </div>
+
+                <form id="submissionForm">
+                    <input type="hidden" id="submitAssignmentId">
+
+                    <div class="mb-3">
+                        <label class="form-label">File</label>
+                        <input type="file" id="submissionFile" class="form-control">
+                        <div class="text-danger small mt-1" id="submissionFileError"></div>
+                    </div>
+
+                    <div class="alert alert-danger d-none" id="submitNonFieldError"></div>
+                </form>
+
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button class="btn btn-primary" id="saveSubmissionBtn">
+                    <i class="bi bi-upload me-2"></i>
+                    Submit
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View Grade Modal (read-only) -->
+<div class="modal fade" id="gradeViewModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Grade Details</h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+
+                <div class="mb-3">
+                    <p class="text-muted mb-1 small">Assignment</p>
+                    <p class="fw-bold mb-0" id="gradeViewAssignmentTitle">—</p>
+                </div>
+
+                <div class="mb-3">
+                    <p class="text-muted mb-1 small">Course</p>
+                    <p class="mb-0" id="gradeViewCourseName">—</p>
+                </div>
+
+                <div class="mb-3">
+                    <p class="text-muted mb-1 small">Marks</p>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="fw-bold fs-5" id="gradeViewMarks">—</span>
+                        <span class="badge bg-secondary" id="gradeViewLetterBadge">—</span>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <p class="text-muted mb-1 small">Feedback</p>
+                    <p class="mb-0" id="gradeViewFeedback"><span class="text-muted">No feedback given.</span></p>
+                </div>
+
+                <div class="mb-3">
+                    <p class="text-muted mb-1 small">Submitted</p>
+                    <p class="mb-0" id="gradeViewSubmittedAt">—</p>
+                </div>
+
+                <a id="gradeViewFileLink" href="#" target="_blank" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-file-earmark-arrow-down me-1"></i> View Submitted File
+                </a>
+
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+</template>
+
+<script src="/js/student-layout.js"></script>
+<script>
+    renderStudentLayout({ pageTitle: "Assignments", active: "assignments" });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/sidebar.js"></script>
+<script src="/js/student-assignments.js"></script>
+
+</body>
+</html>
