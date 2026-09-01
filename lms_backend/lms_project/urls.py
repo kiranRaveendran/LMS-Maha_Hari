@@ -28,6 +28,8 @@ urlpatterns = [
     ),
     path("api/faculty/", include("faculty.urls")),
     path("api/student/", include("student.urls")),
+    path("api/academic-manager/", include("academics.urls")),
+    path("api/academic-manager/", include("leave_management.urls")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:
