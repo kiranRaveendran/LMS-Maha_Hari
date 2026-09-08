@@ -1,6 +1,3 @@
-from django.shortcuts import render
-
-# Create your views here.
 from rest_framework import viewsets, mixins
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -76,7 +73,9 @@ class CourseViewSet(viewsets.ModelViewSet):
 
         if batch_id:
             queryset = queryset.filter(batch_id=batch_id)
-        if faculty_id:
+        if faculty_id == "unassigned":
+            queryset = queryset.filter(faculty__isnull=True)
+        elif faculty_id:
             queryset = queryset.filter(faculty_id=faculty_id)
 
         return queryset
@@ -150,23 +149,27 @@ class StudentCourseViewSet(
 class DropdownOptionsView(APIView):
     """
     GET /api/academic-manager/dropdowns/
-    Returns the faculty and student lists used to populate every
-    select box in the Batch/Course/Enrollment/Allocation pages, in
-    one request rather than one call per dropdown. Deliberately NOT
-    paginated — every dropdown needs the full set in one page, same
-    reasoning as loadDropdownData() in admin-performance.js (a
+    Returns the faculty, student, and batch lists used to populate
+    every select box in the Batch/Course/Enrollment/Allocation pages,
+    in one request rather than one call per dropdown. Deliberately
+    NOT paginated — every dropdown needs the full set in one page,
+    same reasoning as loadDropdownData() in admin-performance.js (a
     paginated dropdown that silently only shows 10 items is a bug,
-    not a feature).
+    not a feature). This also means the Courses page's Batch select
+    should read from here rather than calling BatchViewSet directly
+    (which is paginated and would return {count, results, ...}).
     """
     permission_classes = [IsAuthenticated, IsAcademicManager]
 
     def get(self, request):
         faculty = CustomUser.objects.filter(role="FACULTY").order_by("username")
         students = CustomUser.objects.filter(role="STUDENT").order_by("username")
+        batches = Batch.objects.all().order_by("name")
 
         return Response({
             "faculty": DropdownUserSerializer(faculty, many=True).data,
             "students": DropdownUserSerializer(students, many=True).data,
+            "batches": BatchSerializer(batches, many=True).data,
         })
 
 

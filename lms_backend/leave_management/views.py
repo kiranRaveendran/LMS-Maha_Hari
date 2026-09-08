@@ -10,7 +10,7 @@ from accounts.permissions import IsAcademicManager
 from accounts.pagination import StandardResultsPagination
 
 from leave_management.models import LeaveRequest
-from .serializers import AcademicManagerLeaveRequestSerializer
+from .serializers import AcademicManagerLeaveRequestSerializer, AcademicManagerOwnLeaveRequestSerializer
 
 
 class AcademicManagerLeaveRequestViewSet(
@@ -71,3 +71,54 @@ class AcademicManagerLeaveRequestViewSet(
         leave_request.reviewed_by = request.user
         leave_request.save(update_fields=["status", "reviewed_by"])
         return Response(AcademicManagerLeaveRequestSerializer(leave_request).data)
+
+# ===============================================================
+# Academic Manager's own leave (view history + submit new requests)
+# Mirrors faculty.views.FacultyLeaveHistoryViewSet exactly. These
+# requests are reviewed by Admin — see
+# accounts.views.AdminLeaveRequestViewSet, filtered to
+# applicant__role="ACADEMIC_MANAGER".
+# ===============================================================
+
+class AcademicManagerOwnLeaveViewSet(
+    mixins.ListModelMixin, mixins.RetrieveModelMixin,
+    mixins.CreateModelMixin, mixins.DestroyModelMixin,
+    viewsets.GenericViewSet,
+):
+    """
+    Academic Manager view their own leave history, submit new leave
+    requests to Admin, and withdraw (delete) a request only while
+    it's still PENDING — once reviewed, it becomes a permanent record
+    and can't be deleted.
+
+    GET    /api/academic-manager/leave-history/
+    GET    /api/academic-manager/leave-history/{id}/
+    POST   /api/academic-manager/leave-history/
+    DELETE /api/academic-manager/leave-history/{id}/   (PENDING only)
+    """
+    serializer_class = AcademicManagerOwnLeaveRequestSerializer
+    permission_classes = [IsAuthenticated, IsAcademicManager]
+
+    def get_queryset(self):
+        return (
+            LeaveRequest.objects
+            .filter(applicant=self.request.user)
+            .select_related("reviewed_by")
+            .order_by("-applied_at")
+        )
+
+    def perform_create(self, serializer):
+        # status/reviewed_by are deliberately not client-settable — every
+        # new request starts PENDING with no reviewer, regardless of what
+        # the request body contains (the serializer already locks status
+        # read-only, this is a second, redundant guarantee at the view level).
+        serializer.save(applicant=self.request.user, status="PENDING", reviewed_by=None)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance.status != "PENDING":
+            return Response(
+                {"detail": "Only pending requests can be withdrawn. This request has already been reviewed."},
+                status=400
+            )
+        return super().destroy(request, *args, **kwargs)

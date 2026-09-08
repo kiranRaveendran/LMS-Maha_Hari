@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>My Leave | LMS Academic Manager</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="/css/admin.css">
+    <link rel="stylesheet" href="/css/responsive.css">
+
+</head>
+
+<body>
+
+<template id="page-content-source">
+<div class="container-fluid">
+
+    <div class="row g-4">
+
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-0 py-4">
+                    <h5 class="fw-bold mb-1">Request Leave</h5>
+                    <p class="text-muted mb-0 small">Submitted to the Admin for review.</p>
+                </div>
+                <div class="card-body">
+                    <form id="leaveRequestForm">
+                        <div class="mb-3">
+                            <label class="form-label">Start Date</label>
+                            <input type="date" class="form-control" id="startDate">
+                            <div class="text-danger small mt-1" id="startDateError"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">End Date</label>
+                            <input type="date" class="form-control" id="endDate">
+                            <div class="text-danger small mt-1" id="endDateError"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Reason</label>
+                            <textarea class="form-control" id="reason" rows="4" maxlength="500"></textarea>
+                            <div class="text-danger small mt-1" id="reasonError"></div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100" id="submitLeaveBtn">
+                            <i class="bi bi-send me-2"></i>Submit Request
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-0 py-4">
+                    <h5 class="fw-bold mb-1">My Leave History</h5>
+                    <p class="text-muted mb-0 small">Status of the requests you've submitted.</p>
+                </div>
+                <div class="card-body">
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Reason</th>
+                                    <th>Start Date</th>
+                                    <th>End Date</th>
+                                    <th>Status</th>
+                                    <th>Reviewed By</th>
+                                    <th>Applied On</th>
+                                    <th class="text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leaveTableBody">
+                                <tr>
+                                    <td colspan="8" class="text-center py-5">
+                                        <div class="text-muted">
+                                            <div class="spinner-border text-primary mb-3"></div>
+                                            <br>
+                                            Loading Leave History...
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="d-flex justify-content-end align-items-center mt-3">
+                        <nav id="leavePagination"></nav>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+</template>
+
+<script src="/js/academic-manager-layout.js"></script>
+<script>
+    renderAcademicManagerLayout({ pageTitle: "My Leave", active: "my-leave" });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/sidebar.js"></script>
+<script src="/js/pagination.js"></script>
+<script src="/js/academic-manager-common.js"></script>
+<script src="/js/academic-manager-my-leave.js"></script>
+
+</body>
+
+</html>

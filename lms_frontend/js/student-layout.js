@@ -14,6 +14,7 @@ const STUDENT_NAV_ITEMS = [
   { label: "Assignments",        icon: "bi-clipboard-check",  href: "/student/assignments.html",         key: "assignments" },
   { label: "Grades",             icon: "bi-bar-chart-line",   href: "/student/grades.html",               key: "grades" },
   { label: "Attendance",         icon: "bi-calendar2-check",  href: "/student/attendance.html",           key: "attendance" },
+  { label: "Syllabus",           icon: "bi-journal-text",     href: "/student/syllabus.html",             key: "syllabus" },
   { label: "Leave Requests",     icon: "bi-calendar-check",   href: "/student/leave-requests.html",       key: "leave-requests" },
 ];
 

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from academics.models import Course
+from academics.models import Course, SyllabusTopic
 from accounts.models import CustomUser
 from leave_management.models import LeaveRequest
 
@@ -201,3 +201,28 @@ class StudentLeaveReviewSerializer(serializers.ModelSerializer):
         if value not in ("APPROVED", "REJECTED"):
             raise serializers.ValidationError("Status must be APPROVED or REJECTED.")
         return value
+
+# ===============================================================
+# Faculty Syllabus (view assigned topics, mark completion)
+# ===============================================================
+
+class FacultySyllabusTopicSerializer(serializers.ModelSerializer):
+    """Read side for the Faculty syllabus list/detail views."""
+    course_name = serializers.CharField(source="course.name", read_only=True)
+    course_code = serializers.CharField(source="course.code", read_only=True)
+
+    class Meta:
+        model = SyllabusTopic
+        fields = [
+            "id", "course", "course_name", "course_code",
+            "session_number", "topic_name", "status",
+        ]
+        read_only_fields = fields
+
+
+class FacultySyllabusStatusUpdateSerializer(serializers.ModelSerializer):
+    """Used only for PATCH — faculty can mark a topic Pending/Completed, nothing else."""
+
+    class Meta:
+        model = SyllabusTopic
+        fields = ["status"]

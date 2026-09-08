@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Enrollment &amp; Allocation | LMS Academic Manager</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="/css/admin.css">
+    <link rel="stylesheet" href="/css/responsive.css">
+
+</head>
+
+<body>
+
+<template id="page-content-source">
+<div class="container-fluid">
+
+    <ul class="nav nav-tabs mb-4" id="enrollmentTabs">
+        <li class="nav-item">
+            <button class="nav-link active" id="tab-enrollment-btn" data-bs-toggle="tab" data-bs-target="#tab-enrollment" type="button">
+                <i class="bi bi-people me-1"></i> Student Enrollment
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" id="tab-allocation-btn" data-bs-toggle="tab" data-bs-target="#tab-allocation" type="button">
+                <i class="bi bi-person-check me-1"></i> Faculty Allocation
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+
+        <!-- ===================== Student Enrollment ===================== -->
+        <div class="tab-pane fade show active" id="tab-enrollment">
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h6 class="mb-3">Enroll a Student</h6>
+                    <form id="enrollForm" class="row g-2 align-items-end">
+                        <div class="col-md-5">
+                            <label class="form-label small">Student</label>
+                            <select class="form-select" id="enrollStudent" required>
+                                <option value="">Select student…</option>
+                            </select>
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label small">Course</label>
+                            <select class="form-select" id="enrollCourse" required>
+                                <option value="">Select course…</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100" id="enrollSubmitBtn">Enroll</button>
+                        </div>
+                        <div class="col-12 text-danger small" id="enrollFormError"></div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                        <h6 class="mb-0">Current Enrollments</h6>
+                        <select class="form-select form-select-sm w-auto" id="enrollmentCourseFilter">
+                            <option value="">All courses</option>
+                        </select>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Course</th>
+                                    <th>Batch</th>
+                                    <th>Enrolled On</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="enrollmentTableBody">
+                                <tr>
+                                    <td colspan="5" class="text-center py-5">
+                                        <div class="text-muted">
+                                            <div class="spinner-border text-primary mb-3"></div>
+                                            <br>Loading Enrollments...
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <p class="text-muted small mb-0" id="enrollmentsShowingText">Showing 0 of 0</p>
+                        <nav id="enrollmentsPagination"></nav>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ===================== Faculty Allocation ===================== -->
+        <div class="tab-pane fade" id="tab-allocation">
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h6 class="mb-3">Assign Faculty to Courses</h6>
+                    <p class="text-muted small mb-3">Changes save immediately — pick a faculty member from the dropdown to reassign a course.</p>
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Code</th>
+                                    <th>Course</th>
+                                    <th>Batch</th>
+                                    <th style="width: 320px;">Faculty</th>
+                                </tr>
+                            </thead>
+                            <tbody id="allocationTableBody">
+                                <tr>
+                                    <td colspan="4" class="text-center py-5">
+                                        <div class="text-muted">
+                                            <div class="spinner-border text-primary mb-3"></div>
+                                            <br>Loading Courses...
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<!-- Unenroll Confirm Modal -->
+<div class="modal fade" id="unenrollModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header border-0">
+        <h5 class="modal-title">Remove Enrollment</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted mb-0">Are you sure you want to unenroll this student from the course?</p>
+      </div>
+      <div class="modal-footer border-0">
+        <button class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-danger" id="confirmUnenrollBtn">Remove</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</template>
+
+<script src="/js/academic-manager-layout.js"></script>
+<script>
+    renderAcademicManagerLayout({ pageTitle: "Enrollment & Allocation", active: "enrollment" });
+
+    // Deep-link support: /academic-manager/enrollment.html#allocation
+    // (linked from the dashboard's Quick Links). The layout call above
+    // already moved the page template into the DOM synchronously, so
+    // the tab button exists by this point — no need to wait for a
+    // second DOMContentLoaded.
+    if (window.location.hash === "#allocation") {
+        const tabBtn = document.getElementById("tab-allocation-btn");
+        if (tabBtn) new bootstrap.Tab(tabBtn).show();
+    }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/sidebar.js"></script>
+<script src="/js/pagination.js"></script>
+<script src="/js/academic-manager-common.js"></script>
+<script src="/js/academic-manager-enrollment.js"></script>
+
+</body>
+
+</html>

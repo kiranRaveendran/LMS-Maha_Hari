@@ -18,6 +18,7 @@ const FACULTY_NAV_ITEMS = [
   { label: "Assignments",        icon: "bi-clipboard-check",  href: "/faculty/assignments.html",            key: "assignments" },
   { label: "Attendance",         icon: "bi-calendar2-check",  href: "/faculty/attendance.html",             key: "attendance" },
   { label: "Marks",              icon: "bi-bar-chart-line",   href: "/faculty/marks.html",                  key: "marks" },
+  { label: "Syllabus",           icon: "bi-journal-text",     href: "/faculty/syllabus.html",               key: "syllabus" },
   { label: "Leave Management",   icon: "bi-calendar-check",   href: "/faculty/leave-history.html",          key: "leave-history" },
   { label: "Student Leave Requests", icon: "bi-person-check", href: "/faculty/student-leave-requests.html", key: "student-leave-requests" },
 ];

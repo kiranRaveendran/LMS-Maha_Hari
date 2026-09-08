@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser
 
-from academics.models import StudentCourse
+from academics.models import StudentCourse, SyllabusTopic
 from accounts.permissions import IsStudent
 from faculty.models import Assignment, Submission, Attendance, ExamMark, LearningMaterial
 from leave_management.models import LeaveRequest
@@ -21,6 +21,7 @@ from .serializers import (
     StudentExamMarkSerializer,
     StudentAttendanceSerializer,
     StudentLeaveRequestSerializer,
+    StudentSyllabusTopicSerializer,
 )
 
 
@@ -328,3 +329,34 @@ class StudentLeaveHistoryViewSet(
                 status=400
             )
         return super().destroy(request, *args, **kwargs)
+
+# ===============================================================
+# Student Syllabus — read-only, scoped to enrolled courses.
+# Same enrollment-scoping pattern as StudentLearningMaterialViewSet.
+# ===============================================================
+
+class StudentSyllabusViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    """
+    GET /api/student/syllabus/                 (optionally ?course=<id>)
+    GET /api/student/syllabus/{id}/
+    """
+    serializer_class = StudentSyllabusTopicSerializer
+    permission_classes = [IsAuthenticated, IsStudent]
+
+    def get_queryset(self):
+        enrolled_course_ids = StudentCourse.objects.filter(
+            student=self.request.user
+        ).values_list("course_id", flat=True)
+
+        queryset = (
+            SyllabusTopic.objects
+            .filter(course_id__in=enrolled_course_ids)
+            .select_related("course")
+            .order_by("course_id", "session_number")
+        )
+
+        course_id = self.request.query_params.get("course")
+        if course_id:
+            queryset = queryset.filter(course_id=course_id)
+
+        return queryset

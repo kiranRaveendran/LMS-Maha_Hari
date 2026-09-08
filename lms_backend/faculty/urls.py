@@ -16,7 +16,8 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     FacultyDashboardView, LearningMaterialViewSet, AssignmentViewSet,
     SubmissionViewSet, AttendanceViewSet, ExamMarkViewSet,
-    FacultyLeaveHistoryViewSet, StudentLeaveRequestViewSet
+    FacultyLeaveHistoryViewSet, StudentLeaveRequestViewSet,
+    FacultySyllabusViewSet,
 )
 
 router = DefaultRouter()
@@ -27,6 +28,7 @@ router.register(r"attendance", AttendanceViewSet, basename="attendance")
 router.register(r"exam-marks", ExamMarkViewSet, basename="exam-mark")
 router.register(r"leave-history", FacultyLeaveHistoryViewSet, basename="leave-history")
 router.register(r"student-leave-requests", StudentLeaveRequestViewSet, basename="student-leave-request")
+router.register(r"syllabus", FacultySyllabusViewSet, basename="faculty-syllabus")
 
 urlpatterns = [
     path("dashboard/", FacultyDashboardView.as_view(), name="faculty-dashboard"),
