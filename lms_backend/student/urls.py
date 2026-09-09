@@ -10,6 +10,8 @@ from .views import (
     StudentAttendanceViewSet,
     StudentLeaveHistoryViewSet,
     StudentSyllabusViewSet,
+    StudentAnnouncementViewSet,
+    AcademicManagerOptionsView,
 )
 
 router = DefaultRouter()
@@ -20,8 +22,10 @@ router.register(r"exam-marks", StudentExamMarkViewSet, basename="student-exam-ma
 router.register(r"attendance", StudentAttendanceViewSet, basename="student-attendance")
 router.register(r"leave-history", StudentLeaveHistoryViewSet, basename="student-leave-history")
 router.register(r"syllabus", StudentSyllabusViewSet, basename="student-syllabus")
+router.register(r"announcements", StudentAnnouncementViewSet, basename="student-announcement")
 
 urlpatterns = [
     path("dashboard/", StudentDashboardView.as_view(), name="student-dashboard"),
+    path("academic-managers/", AcademicManagerOptionsView.as_view(), name="student-academic-managers"),
     path("", include(router.urls)),
 ]

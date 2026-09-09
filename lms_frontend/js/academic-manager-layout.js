@@ -17,6 +17,7 @@ const ACADEMIC_MANAGER_NAV_ITEMS = [
   { label: "Enrollment & Allocation", icon: "bi-people",         href: "/academic-manager/enrollment.html",        key: "enrollment" },
   { label: "Syllabus",                icon: "bi-journal-text",   href: "/academic-manager/syllabus.html",          key: "syllabus" },
   { label: "Announcements",           icon: "bi-megaphone",      href: "/academic-manager/announcements.html",     key: "announcements" },
+  { label: "Student Feedback",        icon: "bi-chat-left-text", href: "/academic-manager/feedback.html",          key: "feedback" },
   { label: "Leave Approvals",         icon: "bi-calendar-check", href: "/academic-manager/leave-approvals.html",   key: "leave-approvals" },
   { label: "My Leave",                icon: "bi-calendar2-week", href: "/academic-manager/my-leave.html",          key: "my-leave" },
 ];

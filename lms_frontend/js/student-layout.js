@@ -15,6 +15,8 @@ const STUDENT_NAV_ITEMS = [
   { label: "Grades",             icon: "bi-bar-chart-line",   href: "/student/grades.html",               key: "grades" },
   { label: "Attendance",         icon: "bi-calendar2-check",  href: "/student/attendance.html",           key: "attendance" },
   { label: "Syllabus",           icon: "bi-journal-text",     href: "/student/syllabus.html",             key: "syllabus" },
+  { label: "Announcements",      icon: "bi-megaphone",        href: "/student/announcements.html",        key: "announcements" },
+  { label: "Feedback",           icon: "bi-chat-left-text",   href: "/student/feedback.html",             key: "feedback" },
   { label: "Leave Requests",     icon: "bi-calendar-check",   href: "/student/leave-requests.html",       key: "leave-requests" },
 ];
 
