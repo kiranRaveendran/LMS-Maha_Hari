@@ -8,7 +8,8 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser
 
-from academics.models import StudentCourse
+from academics.models import StudentCourse, SyllabusTopic, Announcement
+from accounts.models import CustomUser
 from accounts.permissions import IsStudent
 from faculty.models import Assignment, Submission, Attendance, ExamMark, LearningMaterial
 from leave_management.models import LeaveRequest
@@ -21,6 +22,9 @@ from .serializers import (
     StudentExamMarkSerializer,
     StudentAttendanceSerializer,
     StudentLeaveRequestSerializer,
+    StudentSyllabusTopicSerializer,
+    StudentAnnouncementSerializer,
+    AcademicManagerOptionSerializer,
 )
 
 
@@ -328,3 +332,81 @@ class StudentLeaveHistoryViewSet(
                 status=400
             )
         return super().destroy(request, *args, **kwargs)
+
+# ===============================================================
+# Student Syllabus — read-only, scoped to enrolled courses.
+# Same enrollment-scoping pattern as StudentLearningMaterialViewSet.
+# ===============================================================
+
+class StudentSyllabusViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    """
+    GET /api/student/syllabus/                 (optionally ?course=<id>)
+    GET /api/student/syllabus/{id}/
+    """
+    serializer_class = StudentSyllabusTopicSerializer
+    permission_classes = [IsAuthenticated, IsStudent]
+
+    def get_queryset(self):
+        enrolled_course_ids = StudentCourse.objects.filter(
+            student=self.request.user
+        ).values_list("course_id", flat=True)
+
+        queryset = (
+            SyllabusTopic.objects
+            .filter(course_id__in=enrolled_course_ids)
+            .select_related("course")
+            .order_by("course_id", "session_number")
+        )
+
+        course_id = self.request.query_params.get("course")
+        if course_id:
+            queryset = queryset.filter(course_id=course_id)
+
+        return queryset
+
+
+# ===============================================================
+# Student Announcements — read-only, scoped to enrolled courses.
+# Same enrollment-scoping pattern as StudentLearningMaterialViewSet
+# and StudentSyllabusViewSet.
+# ===============================================================
+
+class StudentAnnouncementViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    """
+    GET /api/student/announcements/                (optionally ?course=<id>)
+    GET /api/student/announcements/{id}/
+    """
+    serializer_class = StudentAnnouncementSerializer
+    permission_classes = [IsAuthenticated, IsStudent]
+
+    def get_queryset(self):
+        enrolled_course_ids = StudentCourse.objects.filter(
+            student=self.request.user
+        ).values_list("course_id", flat=True)
+
+        queryset = (
+            Announcement.objects
+            .filter(course_id__in=enrolled_course_ids)
+            .select_related("course")
+            .order_by("-created_at")
+        )
+
+        course_id = self.request.query_params.get("course")
+        if course_id:
+            queryset = queryset.filter(course_id=course_id)
+
+        return queryset
+
+
+# ===============================================================
+# Academic Manager options — lightweight list for the "send
+# feedback to" dropdown on the Student Feedback page.
+# ===============================================================
+
+class AcademicManagerOptionsView(APIView):
+    """GET /api/student/academic-managers/ — id/username/name only, for a <select>."""
+    permission_classes = [IsAuthenticated, IsStudent]
+
+    def get(self, request):
+        managers = CustomUser.objects.filter(role="ACADEMIC_MANAGER").order_by("username")
+        return Response(AcademicManagerOptionSerializer(managers, many=True).data)

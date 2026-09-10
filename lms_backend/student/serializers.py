@@ -1,7 +1,8 @@
 from rest_framework import serializers
 
-from academics.models import Course
+from academics.models import Course, SyllabusTopic, Announcement
 from accounts.serializers import UserSerializer
+from accounts.models import CustomUser
 from faculty.models import LearningMaterial, Assignment, Submission, ExamMark, Attendance
 from leave_management.models import LeaveRequest
 
@@ -133,3 +134,47 @@ class StudentLeaveRequestSerializer(serializers.ModelSerializer):
             "status", "applied_at", "reviewed_by_username"
         ]
         read_only_fields = ["id", "status", "applied_at"]
+
+# ===============================================================
+# Student Syllabus (read-only — topics for enrolled courses)
+# ===============================================================
+
+class StudentSyllabusTopicSerializer(serializers.ModelSerializer):
+    course_name = serializers.CharField(source="course.name", read_only=True)
+    course_code = serializers.CharField(source="course.code", read_only=True)
+
+    class Meta:
+        model = SyllabusTopic
+        fields = [
+            "id", "course", "course_name", "course_code",
+            "session_number", "topic_name", "status",
+        ]
+        read_only_fields = fields
+
+
+# ===============================================================
+# Student Announcements (read-only — for enrolled courses)
+# ===============================================================
+
+class StudentAnnouncementSerializer(serializers.ModelSerializer):
+    course_name = serializers.CharField(source="course.name", read_only=True)
+    course_code = serializers.CharField(source="course.code", read_only=True)
+
+    class Meta:
+        model = Announcement
+        fields = [
+            "id", "course", "course_name", "course_code",
+            "title", "message", "created_at",
+        ]
+        read_only_fields = fields
+
+
+# ===============================================================
+# Academic Manager options (for the "send feedback to" dropdown)
+# ===============================================================
+
+class AcademicManagerOptionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ["id", "username", "first_name", "last_name"]
+        read_only_fields = fields

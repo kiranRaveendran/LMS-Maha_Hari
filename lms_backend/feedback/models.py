@@ -21,5 +21,9 @@ class Feedback(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
 
+    response = models.TextField(max_length=1000, blank=True, default="")
+
+    responded_at = models.DateTimeField(null=True, blank=True)
+
     def __str__(self):
         return f"{self.student.username} -> {self.academic_manager.username}"

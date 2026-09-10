@@ -9,7 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.decorators import action
 
-from academics.models import Course, StudentCourse
+from academics.models import Course, StudentCourse, SyllabusTopic
 from accounts.permissions import IsFaculty
 from leave_management.models import LeaveRequest
 
@@ -25,6 +25,7 @@ from .serializers import (
     ExamMarkSerializer,
     FacultyLeaveRequestSerializer,
     StudentLeaveRequestSerializer, StudentLeaveReviewSerializer,
+    FacultySyllabusTopicSerializer, FacultySyllabusStatusUpdateSerializer,
 )
 
 
@@ -516,3 +517,57 @@ class StudentLeaveRequestViewSet(
                 status=400
             )
         return super().destroy(request, *args, **kwargs)
+
+# ===============================================================
+# Faculty Syllabus — view topics for their own courses, mark
+# completion. Faculty never create/delete topics or touch
+# course/session_number/topic_name — that's Academic Manager
+# territory (academics.views.SyllabusTopicViewSet). Faculty can only
+# flip status on a topic that already belongs to a course they teach.
+# ===============================================================
+
+class FacultySyllabusViewSet(
+    mixins.ListModelMixin, mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin, viewsets.GenericViewSet,
+):
+    """
+    GET   /api/faculty/syllabus/               (optionally ?course=<id>&status=)
+    GET   /api/faculty/syllabus/{id}/
+    PATCH /api/faculty/syllabus/{id}/            (status only)
+    """
+    permission_classes = [IsAuthenticated, IsFaculty]
+    # PATCH only, no PUT — same restriction as
+    # accounts.views.AdminLeaveRequestViewSet, since the write
+    # serializer only exposes "status" and a full PUT makes no sense here.
+    http_method_names = ["get", "patch", "head", "options"]
+
+    def get_queryset(self):
+        queryset = (
+            SyllabusTopic.objects
+            .filter(course__faculty=self.request.user)
+            .select_related("course")
+            .order_by("course_id", "session_number")
+        )
+
+        course_id = self.request.query_params.get("course")
+        if course_id:
+            queryset = queryset.filter(course_id=course_id)
+
+        status_param = self.request.query_params.get("status")
+        if status_param:
+            queryset = queryset.filter(status=status_param.upper())
+
+        return queryset
+
+    def get_serializer_class(self):
+        if self.action == "partial_update":
+            return FacultySyllabusStatusUpdateSerializer
+        return FacultySyllabusTopicSerializer
+
+    def partial_update(self, request, *args, **kwargs):
+        super().partial_update(request, *args, **kwargs)
+        # Re-fetch and re-serialize with the full read serializer so the
+        # response shape matches list/retrieve, rather than echoing back
+        # just the {"status": ...} the restricted write serializer saw.
+        instance = self.get_object()
+        return Response(FacultySyllabusTopicSerializer(instance).data)

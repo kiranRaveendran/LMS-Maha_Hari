@@ -1,30 +1,32 @@
 // ===============================================================
-// Student portal layout. Same pattern as js/faculty-layout.js,
-// kept as its own file so nothing here can affect Admin or Faculty.
-// Reuses the same shell IDs (sidebarOverlay, sidebarToggle,
-// logoutModal, confirmLogoutBtn, appToast, toastMessage) so the
-// existing js/sidebar.js and js/auth.js work unchanged here too.
+// Academic Manager portal layout. Same pattern as js/faculty-layout.js
+// / js/student-layout.js, kept as its own file so nothing here can
+// affect Admin, Faculty, or Student. Reuses the same shell IDs
+// (sidebarOverlay, sidebarToggle, logoutModal, confirmLogoutBtn,
+// appToast, toastMessage) so the existing js/sidebar.js and js/auth.js
+// work unchanged here too.
 //
-// Every student page calls: renderStudentLayout({ pageTitle, active })
+// Every academic manager page calls:
+//   renderAcademicManagerLayout({ pageTitle, active })
 // ===============================================================
 
-const STUDENT_NAV_ITEMS = [
-  { label: "Dashboard",          icon: "bi-speedometer2",     href: "/student_dashboard.html",           key: "dashboard" },
-  { label: "Learning Materials", icon: "bi-journal-richtext", href: "/student/learning-materials.html",  key: "learning-materials" },
-  { label: "Assignments",        icon: "bi-clipboard-check",  href: "/student/assignments.html",         key: "assignments" },
-  { label: "Grades",             icon: "bi-bar-chart-line",   href: "/student/grades.html",               key: "grades" },
-  { label: "Attendance",         icon: "bi-calendar2-check",  href: "/student/attendance.html",           key: "attendance" },
-  { label: "Syllabus",           icon: "bi-journal-text",     href: "/student/syllabus.html",             key: "syllabus" },
-  { label: "Announcements",      icon: "bi-megaphone",        href: "/student/announcements.html",        key: "announcements" },
-  { label: "Feedback",           icon: "bi-chat-left-text",   href: "/student/feedback.html",             key: "feedback" },
-  { label: "Leave Requests",     icon: "bi-calendar-check",   href: "/student/leave-requests.html",       key: "leave-requests" },
+const ACADEMIC_MANAGER_NAV_ITEMS = [
+  { label: "Dashboard",               icon: "bi-speedometer2",   href: "/academic_manager_dashboard.html",         key: "dashboard" },
+  { label: "Batch Management",        icon: "bi-diagram-3",      href: "/academic-manager/batches.html",           key: "batches" },
+  { label: "Course Management",       icon: "bi-book",           href: "/academic-manager/courses.html",           key: "courses" },
+  { label: "Enrollment & Allocation", icon: "bi-people",         href: "/academic-manager/enrollment.html",        key: "enrollment" },
+  { label: "Syllabus",                icon: "bi-journal-text",   href: "/academic-manager/syllabus.html",          key: "syllabus" },
+  { label: "Announcements",           icon: "bi-megaphone",      href: "/academic-manager/announcements.html",     key: "announcements" },
+  { label: "Student Feedback",        icon: "bi-chat-left-text", href: "/academic-manager/feedback.html",          key: "feedback" },
+  { label: "Leave Approvals",         icon: "bi-calendar-check", href: "/academic-manager/leave-approvals.html",   key: "leave-approvals" },
+  { label: "My Leave",                icon: "bi-calendar2-week", href: "/academic-manager/my-leave.html",          key: "my-leave" },
 ];
 
-function renderStudentLayout({ pageTitle, active }) {
+function renderAcademicManagerLayout({ pageTitle, active }) {
 
-  document.title = `${pageTitle} | LMS Student`;
+  document.title = `${pageTitle} | LMS Academic Manager`;
 
-  const navHtml = STUDENT_NAV_ITEMS.map(item => `
+  const navHtml = ACADEMIC_MANAGER_NAV_ITEMS.map(item => `
     <li>
       <a href="${item.href}" class="nav-link${item.key === active ? " active" : ""}">
         <i class="bi ${item.icon}"></i>
@@ -43,7 +45,7 @@ function renderStudentLayout({ pageTitle, active }) {
       <aside class="sidebar" id="sidebar">
         <div class="logo">
           <i class="bi bi-mortarboard-fill"></i>
-          <span>LMS Student</span>
+          <span>LMS Academic Manager</span>
         </div>
 
         <ul class="nav-menu">
@@ -161,12 +163,13 @@ function renderStudentLayout({ pageTitle, active }) {
 }
 
 // ===============================================================
-// Profile picture widget — identical pattern to layout.js / faculty-layout.js.
-// Named renderTopbarProfile (not renderProfile) deliberately — a plain
-// `renderProfile` collided with an unrelated global function of the same
-// name in faculty-dashboard.js and silently broke the Faculty topbar
-// avatar. Keep this name if you add a student-dashboard.js with its own
-// profile-rendering function.
+// Profile picture widget — identical pattern to layout.js /
+// faculty-layout.js / student-layout.js. Named renderTopbarProfile
+// (not renderProfile) deliberately — a plain `renderProfile` collided
+// with an unrelated global function of the same name in
+// faculty-dashboard.js and silently broke the Faculty topbar avatar.
+// Keep this name if this module ever gets its own dashboard.js with a
+// similarly-named function.
 // ===============================================================
 
 document.addEventListener("DOMContentLoaded", initProfileWidget);
