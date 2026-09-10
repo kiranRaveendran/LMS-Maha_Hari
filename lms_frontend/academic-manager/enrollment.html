@@ -44,24 +44,41 @@
 
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-body">
-                    <h6 class="mb-3">Enroll a Student</h6>
-                    <form id="enrollForm" class="row g-2 align-items-end">
-                        <div class="col-md-5">
-                            <label class="form-label small">Student</label>
-                            <select class="form-select" id="enrollStudent" required>
-                                <option value="">Select student…</option>
-                            </select>
+                    <h6 class="mb-3">Enroll Students</h6>
+                    <form id="enrollForm">
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small">Course</label>
+                                <select class="form-select" id="enrollCourse" required>
+                                    <option value="">Select course…</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small">Search Students</label>
+                                <input type="text" class="form-control" id="studentSearchInput" placeholder="Search by name or username…">
+                            </div>
                         </div>
-                        <div class="col-md-5">
-                            <label class="form-label small">Course</label>
-                            <select class="form-select" id="enrollCourse" required>
-                                <option value="">Select course…</option>
-                            </select>
+
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="form-label small mb-0">Students</label>
+                            <div>
+                                <button type="button" class="btn btn-sm btn-link p-0 me-3" id="selectAllStudentsBtn">Select All</button>
+                                <button type="button" class="btn btn-sm btn-link p-0 text-danger" id="clearStudentsBtn">Clear</button>
+                            </div>
                         </div>
-                        <div class="col-md-2">
-                            <button type="submit" class="btn btn-primary w-100" id="enrollSubmitBtn">Enroll</button>
+
+                        <div id="studentCheckboxList" class="border rounded p-2 mb-2" style="max-height: 280px; overflow-y: auto;">
+                            <div class="text-muted text-center py-4">Loading students…</div>
                         </div>
-                        <div class="col-12 text-danger small" id="enrollFormError"></div>
+
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted small" id="selectedStudentsCount">0 selected</span>
+                            <button type="submit" class="btn btn-primary" id="enrollSubmitBtn">Enroll Selected</button>
+                        </div>
+
+                        <div class="text-danger small mt-2" id="enrollFormError"></div>
+
                     </form>
                 </div>
             </div>
