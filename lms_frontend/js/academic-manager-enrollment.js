@@ -4,9 +4,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
 const COURSES_URL = `${API.BASE_URL}/api/academic-manager/courses/`;
 const ENROLLMENTS_URL = `${API.BASE_URL}/api/academic-manager/enrollments/`;
+const BULK_ENROLL_URL = `${API.BASE_URL}/api/academic-manager/enrollments/bulk-create/`;
 const DROPDOWNS_URL = `${API.BASE_URL}/api/academic-manager/dropdowns/`;
 
 let courses = [];
+let allStudents = [];
+let selectedStudentIds = new Set();
 
 let enrollmentTableBody;
 let unenrollModal;
@@ -50,6 +53,9 @@ function initialize() {
     document.getElementById("enrollmentCourseFilter").addEventListener("change", () => loadEnrollments(1));
     document.getElementById("enrollForm").addEventListener("submit", submitEnrollment);
     document.getElementById("confirmUnenrollBtn").addEventListener("click", confirmUnenroll);
+    document.getElementById("studentSearchInput").addEventListener("input", (e) => renderStudentCheckboxes(e.target.value));
+    document.getElementById("selectAllStudentsBtn").addEventListener("click", selectAllVisibleStudents);
+    document.getElementById("clearStudentsBtn").addEventListener("click", clearSelectedStudents);
 
     init();
 
@@ -93,11 +99,88 @@ async function loadSharedOptions() {
     const courseFilterSelect = document.getElementById("enrollmentCourseFilter");
     courseFilterSelect.innerHTML = `<option value="">All courses</option>` + courseOptionsHtml;
 
-    const studentSelect = document.getElementById("enrollStudent");
-    studentSelect.innerHTML = `<option value="">Select student…</option>` +
-        dropdownsRes.data.students.map(s => `<option value="${s.id}">${studentLabel(s)}</option>`).join("");
+    allStudents = dropdownsRes.data.students;
+    renderStudentCheckboxes("");
 
     renderAllocationTable(dropdownsRes.data.faculty);
+
+}
+
+// ===============================
+// Student checkbox picker — replaces the old single-select dropdown
+// so an Academic Manager can enroll a whole batch of students in one
+// submit instead of one at a time. Selection (selectedStudentIds)
+// persists across search filtering and across a course switch, so
+// narrowing the search or changing the course doesn't silently drop
+// students already checked.
+// ===============================
+
+function renderStudentCheckboxes(searchTerm) {
+
+    const container = document.getElementById("studentCheckboxList");
+    const term = searchTerm.trim().toLowerCase();
+
+    const visible = term
+        ? allStudents.filter(s => studentLabel(s).toLowerCase().includes(term))
+        : allStudents;
+
+    if (!visible.length) {
+        container.innerHTML = `<div class="text-muted text-center py-4">No students match your search.</div>`;
+        return;
+    }
+
+    container.innerHTML = visible.map(s => `
+        <div class="form-check py-1">
+            <input class="form-check-input student-checkbox" type="checkbox" value="${s.id}" id="student-${s.id}"
+                   ${selectedStudentIds.has(String(s.id)) ? "checked" : ""}>
+            <label class="form-check-label" for="student-${s.id}">${studentLabel(s)}</label>
+        </div>
+    `).join("");
+
+    container.querySelectorAll(".student-checkbox").forEach(checkbox => {
+        checkbox.addEventListener("change", () => {
+            if (checkbox.checked) {
+                selectedStudentIds.add(checkbox.value);
+            } else {
+                selectedStudentIds.delete(checkbox.value);
+            }
+            updateSelectedCount();
+        });
+    });
+
+    updateSelectedCount();
+
+}
+
+function selectAllVisibleStudents() {
+
+    document.querySelectorAll(".student-checkbox").forEach(checkbox => {
+        checkbox.checked = true;
+        selectedStudentIds.add(checkbox.value);
+    });
+
+    updateSelectedCount();
+
+}
+
+function clearSelectedStudents() {
+
+    selectedStudentIds.clear();
+
+    document.querySelectorAll(".student-checkbox").forEach(checkbox => {
+        checkbox.checked = false;
+    });
+
+    updateSelectedCount();
+
+}
+
+function updateSelectedCount() {
+
+    const countEl = document.getElementById("selectedStudentsCount");
+    const count = selectedStudentIds.size;
+
+    countEl.textContent = `${count} selected`;
 
 }
 
@@ -225,10 +308,18 @@ async function submitEnrollment(e) {
     const errorEl = document.getElementById("enrollFormError");
     errorEl.textContent = "";
 
-    const payload = {
-        student: document.getElementById("enrollStudent").value,
-        course: document.getElementById("enrollCourse").value,
-    };
+    const courseId = document.getElementById("enrollCourse").value;
+    const studentIds = Array.from(selectedStudentIds);
+
+    if (!courseId) {
+        errorEl.textContent = "Please select a course.";
+        return;
+    }
+
+    if (!studentIds.length) {
+        errorEl.textContent = "Please select at least one student.";
+        return;
+    }
 
     const submitBtn = document.getElementById("enrollSubmitBtn");
     submitBtn.disabled = true;
@@ -236,20 +327,33 @@ async function submitEnrollment(e) {
 
     try {
 
-        await api.post(ENROLLMENTS_URL, payload);
-        showToast("Student enrolled.");
-        document.getElementById("enrollForm").reset();
+        const response = await api.post(BULK_ENROLL_URL, {
+            students: studentIds,
+            course: courseId,
+        });
+
+        const { created_count, already_enrolled_count } = response.data;
+
+        let message = `${created_count} student${created_count === 1 ? "" : "s"} enrolled.`;
+        if (already_enrolled_count) {
+            message += ` (${already_enrolled_count} were already enrolled in this course.)`;
+        }
+        showToast(message);
+
+        clearSelectedStudents();
+        document.getElementById("studentSearchInput").value = "";
+        renderStudentCheckboxes("");
         loadEnrollments(1);
 
     } catch (error) {
 
         console.error(error);
-        errorEl.textContent = extractApiError(error, "Could not enroll student.");
+        errorEl.textContent = extractApiError(error, "Could not enroll students.");
 
     } finally {
 
         submitBtn.disabled = false;
-        submitBtn.textContent = "Enroll";
+        submitBtn.textContent = "Enroll Selected";
 
     }
 

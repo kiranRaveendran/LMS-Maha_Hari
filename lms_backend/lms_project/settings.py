@@ -12,8 +12,16 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 
 from pathlib import Path
 
+import os
+from dotenv import load_dotenv
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Loads key=value pairs from lms_backend/.env into the environment so
+# os.environ.get(...) below can see them. .env itself is gitignored
+# (see .gitignore) — it holds real secrets and must never be committed.
+load_dotenv(BASE_DIR / ".env")
 
 
 # Quick-start development settings - unsuitable for production
@@ -29,16 +37,16 @@ ALLOWED_HOSTS = []
 
 # ===============================================================
 # Razorpay (Test Mode) — Fee Management payment gateway.
-# Get these from dashboard.razorpay.com under Settings > API Keys,
-# with "Test Mode" toggled on (top-right switch). See the setup guide
-# in the chat for step-by-step instructions.
+# Real values live in lms_backend/.env (gitignored), loaded above via
+# load_dotenv(). See .env.example for the keys .env needs, and the
+# chat history for step-by-step instructions on generating them at
+# dashboard.razorpay.com under Settings > API Keys ("Test Mode" toggled on).
 # SECURITY WARNING: RAZORPAY_KEY_SECRET must never be sent to the
 # frontend or committed anywhere public — same caution as SECRET_KEY
-# above. For anything beyond local testing, load both of these (and
-# SECRET_KEY) from environment variables instead of hardcoding them.
+# above.
 # ===============================================================
-RAZORPAY_KEY_ID = "rzp_test_TaEkuZfksvIUXr"
-RAZORPAY_KEY_SECRET = "ExHKvzSyENQgBw5J7f9u8eWV"
+RAZORPAY_KEY_ID = os.environ.get("RAZORPAY_KEY_ID", "")
+RAZORPAY_KEY_SECRET = os.environ.get("RAZORPAY_KEY_SECRET", "")
 
 # Fixed demo fee amount (in INR) auto-assigned to every student the
 # first time they open the Fees page — see fees.views.get_or_create_fee().

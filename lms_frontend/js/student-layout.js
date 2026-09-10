@@ -17,6 +17,7 @@ const STUDENT_NAV_ITEMS = [
   { label: "Syllabus",           icon: "bi-journal-text",     href: "/student/syllabus.html",             key: "syllabus" },
   { label: "Announcements",      icon: "bi-megaphone",        href: "/student/announcements.html",        key: "announcements" },
   { label: "Feedback",           icon: "bi-chat-left-text",   href: "/student/feedback.html",             key: "feedback" },
+  { label: "Fees",               icon: "bi-credit-card",      href: "/student/fees.html",                 key: "fees" },
   { label: "Leave Requests",     icon: "bi-calendar-check",   href: "/student/leave-requests.html",       key: "leave-requests" },
 ];
 
