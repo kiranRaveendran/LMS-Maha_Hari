@@ -141,6 +141,58 @@ class StudentCourseViewSet(
 
         return queryset
 
+    @action(detail=False, methods=["post"], url_path="bulk-create")
+    def bulk_create(self, request):
+        """
+        POST /api/academic-manager/enrollments/bulk-create/
+        Body: { "students": [id, id, ...], "course": id }
+
+        Enrolls several students into one course in a single request —
+        backs the Enrollment page's multi-select checkboxes. Runs
+        per-student rather than as one atomic transaction: a student
+        who's already enrolled (or an invalid id slipped into the list)
+        shouldn't block the rest of a valid batch from going through, so
+        each one is get_or_create'd independently and the response
+        reports how many landed in each bucket rather than
+        all-or-nothing raising on the first conflict.
+        """
+        student_ids = request.data.get("students")
+        course_id = request.data.get("course")
+
+        if not course_id:
+            return Response({"detail": "course is required."}, status=400)
+
+        if not isinstance(student_ids, list) or not student_ids:
+            return Response({"detail": "students must be a non-empty list of student IDs."}, status=400)
+
+        try:
+            course = Course.objects.get(id=course_id)
+        except Course.DoesNotExist:
+            return Response({"detail": "Course not found."}, status=404)
+
+        created_count = 0
+        already_enrolled_count = 0
+        invalid_count = 0
+
+        for student_id in student_ids:
+            try:
+                student = CustomUser.objects.get(id=student_id, role="STUDENT")
+            except CustomUser.DoesNotExist:
+                invalid_count += 1
+                continue
+
+            _, was_created = StudentCourse.objects.get_or_create(student=student, course=course)
+            if was_created:
+                created_count += 1
+            else:
+                already_enrolled_count += 1
+
+        return Response({
+            "created_count": created_count,
+            "already_enrolled_count": already_enrolled_count,
+            "invalid_count": invalid_count,
+        }, status=201 if created_count else 200)
+
 
 # ===============================================================
 # Dropdown data for the Course / Enrollment / Allocation forms

@@ -27,6 +27,23 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+# ===============================================================
+# Razorpay (Test Mode) — Fee Management payment gateway.
+# Get these from dashboard.razorpay.com under Settings > API Keys,
+# with "Test Mode" toggled on (top-right switch). See the setup guide
+# in the chat for step-by-step instructions.
+# SECURITY WARNING: RAZORPAY_KEY_SECRET must never be sent to the
+# frontend or committed anywhere public — same caution as SECRET_KEY
+# above. For anything beyond local testing, load both of these (and
+# SECRET_KEY) from environment variables instead of hardcoding them.
+# ===============================================================
+RAZORPAY_KEY_ID = "rzp_test_TaEkuZfksvIUXr"
+RAZORPAY_KEY_SECRET = "ExHKvzSyENQgBw5J7f9u8eWV"
+
+# Fixed demo fee amount (in INR) auto-assigned to every student the
+# first time they open the Fees page — see fees.views.get_or_create_fee().
+DEFAULT_FEE_AMOUNT = 50000
+
 
 # Application definition
 
@@ -44,6 +61,7 @@ INSTALLED_APPS = [
     'faculty',
     'leave_management',
     'feedback',
+    'fees',
     'student',
     "corsheaders",
 ]
